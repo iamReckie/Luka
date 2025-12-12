@@ -1,0 +1,39 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "CMake Configure",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "-S", ".",
+        "-B", "build",
+        "-G", "MinGW Makefiles"
+      ],
+      "options": {
+        "env": {
+          "CC": "gcc",
+          "CXX": "g++"
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "CMake Build",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--build", "build",
+        "--verbose"
+      ],
+      "problemMatcher": [],
+      "dependsOn": ["CMake Configure"]
+    },
+    {
+      "label": "Run Executable",
+      "type": "shell",
+      "command": "${workspaceFolder}/build/bin/NowActuary.exe",
+      "dependsOn": ["CMake Build"]
+    }
+  ]
+}

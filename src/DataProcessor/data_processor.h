@@ -1,0 +1,52 @@
+// ============================================================================
+// Copyright © 2025 Luka. All rights reserved.
+// SPDX-License-Identifier: Proprietary
+//
+// This software is proprietary and confidential.
+// Redistribution, modification, or any form of reuse without explicit
+// written permission from Luka is strictly prohibited.
+//
+// This file is a component of the Luka Risk Intelligence Suite™.
+// Unauthorized use may result in legal action.
+//
+// Developed by: Luka
+// ============================================================================
+#ifndef SRC_DATAPROCESSOR_DATA_PROCESSOR_H_
+#define SRC_DATAPROCESSOR_DATA_PROCESSOR_H_
+#include <any>
+#include <memory>
+#include <vector>
+class DataHelper;
+class IDataStructure {
+ public:
+  explicit IDataStructure(std::weak_ptr<DataHelper> data_helper)
+      : data_helper_(data_helper) {}
+  virtual void ConstructDataStructure(const std::vector<std::any>& args,
+                                      std::wstring& key) = 0;
+  virtual void PrintDataStructure() const = 0;
+  virtual ~IDataStructure() = default;
+
+ protected:
+  std::weak_ptr<DataHelper> data_helper_;
+};
+class DataProcessor {
+ public:
+  explicit DataProcessor(std::shared_ptr<IDataStructure> data_structure)
+      : data_structure_(data_structure) {}
+  void ConstructDataStructure(const std::vector<std::any>& args,
+                              std::wstring& key) {
+    if (data_structure_) {
+      data_structure_->ConstructDataStructure(args, key);
+    }
+  }
+  void PrintDataStructure() {
+    if (data_structure_) {
+      data_structure_->PrintDataStructure();
+    }
+  }
+  virtual ~DataProcessor() = default;
+
+ private:
+  std::shared_ptr<IDataStructure> data_structure_;
+};
+#endif  // SRC_DATAPROCESSOR_DATA_PROCESSOR_H_
