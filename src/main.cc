@@ -11,5 +11,9 @@
 //
 // Developed by: Luka
 // ============================================================================
+#include <cstdio>
+
 #include "SequenceStarter/sequence_starter.h"
-int main(int argc, char* argv[]) { return StartSequence(argc, argv); }
+int main(int argc, char* argv[]) {
+  return StartSequence(argc, argv);
+}

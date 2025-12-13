@@ -25,6 +25,5 @@ class CalcInsuranceExpenseCommand : public BaseCommand {
   explicit CalcInsuranceExpenseCommand(std::shared_ptr<DataHelper> helper)
       : BaseCommand(helper) {}
   void Execute(const YAML::Node& command_data) override;
-  std::vector<int> get_GP_Input_range(const std::wstring& input);
 };
 #endif  // SRC_COMMANDPROCESSOR_CALC_INSURANCE_EXPENSE_H_

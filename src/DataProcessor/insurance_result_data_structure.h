@@ -27,7 +27,7 @@ struct InsuranceResult {
   int x;
   int AMT;
   int dnum;
-  int GP_Input[10][10];
+  std::vector<std::vector<int>> GP_Input;
 };
 struct InsuranceResultIndex {
   int bojong;

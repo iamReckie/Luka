@@ -13,18 +13,6 @@
 // ============================================================================
 #ifndef SRC_CONVERTER_CONVERTER_H_
 #define SRC_CONVERTER_CONVERTER_H_
-#include <codecvt>
-#include <cstdlib>
-#include <locale>
-#include <string>
+#include "Converter/string_utils.h"
 
-inline std::wstring Ctw(const std::string& str) {
-  std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-  std::wstring wstr = converter.from_bytes(str);
-  return wstr;
-}
-inline std::string Cts(const std::wstring& str) {
-  std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
-  return converter.to_bytes(str);
-}
 #endif  // SRC_CONVERTER_CONVERTER_H_

@@ -15,31 +15,9 @@
 
 #include <OpenXLSX.hpp>
 
-#include "Converter/converter.h"
+#include "Converter/excel_utils.h"
+#include "Converter/string_utils.h"
 #include "Logger/logger.h"
-std::vector<int> ReadExcelCommand::get_excel_range(const std::wstring &input) {
-  std::vector<int> ranges;
-  std::wstringstream ss(input);
-  std::wstring token;
-  auto excel_column_to_number = [](const std::wstring &column) -> int {
-    int result = 0;
-    for (char c : column) {
-      result = result * 26 + (c - 'A' + 1);
-    }
-    return result;
-  };
-  auto is_numeric = [](const std::wstring &input) -> bool {
-    return !input.empty() && std::all_of(input.begin(), input.end(), ::isdigit);
-  };
-  while (std::getline(ss, token, L':')) {
-    if (!is_numeric(token)) {
-      ranges.push_back(excel_column_to_number(token));
-    } else {
-      ranges.push_back(std::stoi(token));
-    }
-  }
-  return ranges;
-}
 std::wstring
 ReadExcelCommand::get_cell_value(const OpenXLSX::XLCellValue &cell_value) {
   std::wstring type = Ctw(cell_value.typeAsString());
@@ -66,7 +44,7 @@ void ReadExcelCommand::Execute(const YAML::Node &command_data) {
     std::vector<int> ranges;
     Logger::Log(L"sheet name : %ls type : %ls\n", sheet_name.c_str(),
                 sheet_type.c_str());
-    ranges = get_excel_range(range);
+    ranges = ExcelUtils::ParseExcelRange(range);
     auto wks = doc.workbook().worksheet(Cts(sheet_name));
     for (int row = ranges[0]; row <= ranges[1]; row++) {
       key = L"";

@@ -18,33 +18,9 @@
 #include <vector>
 
 #include "Converter/converter.h"
+#include "Converter/excel_utils.h"
 #include "DataProcessor/insurance_result_data_structure.h"
 #include "Logger/logger.h"
-
-std::vector<int>
-CalcInsuranceExpenseCommand::get_GP_Input_range(const std::wstring &input) {
-  std::vector<int> ranges;
-  std::wstringstream ss(input);
-  std::wstring token;
-  auto excel_column_to_number = [](const std::wstring &column) -> int {
-    int result = 0;
-    for (char c : column) {
-      result = result * 26 + (c - 'A' + 1);
-    }
-    return result;
-  };
-  auto is_numeric = [](const std::wstring &input) -> bool {
-    return !input.empty() && std::all_of(input.begin(), input.end(), ::isdigit);
-  };
-  while (std::getline(ss, token, L':')) {
-    if (!is_numeric(token)) {
-      ranges.push_back(excel_column_to_number(token));
-    } else {
-      ranges.push_back(std::stoi(token));
-    }
-  }
-  return ranges;
-}
 
 void CalcInsuranceExpenseCommand::Execute(const YAML::Node &command_data) {
   std::wstring file_name = Ctw(command_data["name"].as<std::string>());
@@ -69,12 +45,12 @@ void CalcInsuranceExpenseCommand::Execute(const YAML::Node &command_data) {
         if (var["index"].IsSequence()) {
           for (const auto &idx : var["index"]) {
             std::string string_value = idx.as<std::string>();
-            auto temp_ranges = get_GP_Input_range(Ctw(string_value));
+            auto temp_ranges = ExcelUtils::ParseExcelRange(Ctw(string_value));
             result->GP_Input.push_back(temp_ranges);
           }
         } else {
           std::string string_value = var["index"].as<std::string>();
-          auto temp_ranges = get_GP_Input_range(Ctw(string_value));
+          auto temp_ranges = ExcelUtils::ParseExcelRange(Ctw(string_value));
           result->GP_Input.push_back(temp_ranges);
         }
       }

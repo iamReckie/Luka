@@ -27,6 +27,5 @@ class ReadExcelCommand : public BaseCommand {
       : BaseCommand(helper) {}
   void Execute(const YAML::Node& command_data) override;
   std::wstring get_cell_value(const OpenXLSX::XLCellValue& cell_value);
-  std::vector<int> get_excel_range(const std::wstring& input);
 };
 #endif  // SRC_COMMANDPROCESSOR_READ_EXCEL_H_

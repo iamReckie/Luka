@@ -26,6 +26,9 @@ int StartSequence(int argc, char* argv[]) {
   for (int i = 0; i < argc; i++) {
     printf("%s\n", argv[i]);
   }
+  // Initialize logger
+  Logger::Initialize("./output.log");
+
   // first step : initiate commands
   std::shared_ptr<CommandHelper> command_helper = std::make_shared<CommandHelper>();
   // scenario file is always scenario.yaml

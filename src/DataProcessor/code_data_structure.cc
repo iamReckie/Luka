@@ -18,10 +18,10 @@
 #include <unordered_map>
 #include <vector>
 
+#include "DataProcessor/excel_columns.h"
 #include "Logger/logger.h"
 void CodeDataStructure::ConstructDataStructure(
     const std::vector<std::any>& args, std::wstring& key) {
-  // lambda
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);
   int key_to_int = 0;
@@ -29,41 +29,41 @@ void CodeDataStructure::ConstructDataStructure(
   auto toDouble = [](const std::wstring& str) -> float {
     return std::stod(str);
   };
-  if (column == 1) {
+  if (column == CodeColumns::FIRST_COLUMN) {
     key = input;
     key_to_int = toInt(key);
     code_table_[key_to_int] = std::make_shared<CodeTable>();
     return;
   }
   key_to_int = toInt(key);
-  auto current_code_table = code_table_[key_to_int];
+  auto current_code_table = code_table_[key_to_int].get();
   switch (column) {
-    case 1:
+    case CodeColumns::FIRST_COLUMN:
       break;
-    case 2:
+    case CodeColumns::DNUM:
       current_code_table->dnum = toInt(input);
       break;
-    case 3:
+    case CodeColumns::NAME:
       current_code_table->name = input;
       break;
-    case 4:
+    case CodeColumns::QX_KU:
       current_code_table->qx_ku = toInt(input);
       break;
-    case 5:
+    case CodeColumns::MHJ:
       current_code_table->mhj = toInt(input);
       break;
-    case 6:
+    case CodeColumns::RE:
       current_code_table->re = toInt(input);
       break;
-    case 11:
+    case CodeColumns::M_COUNT:
       current_code_table->M_count = toInt(input);
       break;
     default:
-      if (column > 11 && column < 43) {
+      if (column > CodeColumns::QX_TABLE_START && column <= CodeColumns::QX_TABLE_END) {
         current_code_table->qx_table_[input];  // default-construct entry
         table_for_qx_table_[current_index_of_qx_table_++] = input;
-      } else if (column >= 43) {
-        int qx_index = (column - 43) / 3;
+      } else if (column >= CodeColumns::QX_VALUES_START) {
+        int qx_index = (column - CodeColumns::QX_VALUES_START) / 3;
         if (qx_index < current_index_of_qx_table_) {
           const std::wstring& qx_name = table_for_qx_table_[qx_index];
           current_code_table->qx_table_[qx_name].emplace_back(toDouble(input));
@@ -75,7 +75,7 @@ void CodeDataStructure::ConstructDataStructure(
 void CodeDataStructure::PrintDataStructure() const {
   for (const auto& entry : code_table_) {
     int code_index = entry.first;
-    auto current_code_table = entry.second;
+    auto current_code_table = entry.second.get();
 
     Logger::Log(L"Code Index: %d\n", code_index);
     Logger::Log(L"  dnum: %d\n", current_code_table->dnum);

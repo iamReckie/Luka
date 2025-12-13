@@ -13,6 +13,7 @@
 // ============================================================================
 #ifndef SRC_COMMANDPROCESSOR_COMMAND_PROCESSOR_H_
 #define SRC_COMMANDPROCESSOR_COMMAND_PROCESSOR_H_
+#include <atomic>
 #include <memory>
 #include <unordered_map>
 
@@ -37,18 +38,31 @@ class BaseCommand : public ICommand {
 
 class CommandHelper {
  public:
-  CommandHelper() : data_helper_(std::make_shared<DataHelper>()) {}
+  CommandHelper() : data_helper_(std::make_shared<DataHelper>()),
+                    commands_initialized_(false) {
+    RegisterAllCommands();
+    // Mark as initialized with release semantics for lock-free synchronization
+    commands_initialized_.store(true, std::memory_order_release);
+  }
   ~CommandHelper() = default;
+
   void ExecuteCommand(const std::wstring& command_name,
-                      const std::wstring& name, const YAML::Node& command_data);
-  void RegisterCommand(const std::wstring& command_name,
-                       const std::wstring& name);
+                      const std::wstring& /*name*/, const YAML::Node& command_data) {
+    // All commands are pre-initialized, just look up and execute
+    auto it = command_instances_.find(command_name);
+    if (it != command_instances_.end()) {
+      it->second->Execute(command_data);
+    } else {
+      Logger::Log(L"Unknown command %ls\n", command_name.c_str());
+    }
+  }
 
  private:
   std::shared_ptr<DataHelper> data_helper_;
-  std::unordered_map<
-      std::wstring,
-      std::unordered_map<std::wstring, std::shared_ptr<BaseCommand>>>
-      commands_;
+  std::unordered_map<std::wstring, std::shared_ptr<BaseCommand>>
+      command_instances_;
+  std::atomic<bool> commands_initialized_;  // Lock-free initialization flag
+
+  void RegisterAllCommands();
 };
 #endif  // SRC_COMMANDPROCESSOR_COMMAND_PROCESSOR_H_

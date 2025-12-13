@@ -14,7 +14,9 @@
 #ifndef SRC_DATAPROCESSOR_DATA_HELPER_H_
 #define SRC_DATAPROCESSOR_DATA_HELPER_H_
 #include <any>
+#include <atomic>
 #include <memory>
+#include <shared_mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -33,18 +35,40 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
  public:
   DataHelper() = default;
   ~DataHelper() = default;
+
   void ExecuteData(const std::wstring &name, std::wstring &key, const std::wstring type, const std::vector<std::any> &args) {
     Logger::Log(L"Executing Data Structure: %ls of type: %ls\n", name.c_str(), type.c_str());
-    if (data_processors_.find(name) == data_processors_.end()) {
-      data_processors_[name] = CreateDataStructure(type);
+    
+    // Double-checked locking pattern with shared_mutex for read-heavy workload
+    {
+      std::shared_lock<std::shared_mutex> read_lock(data_processors_mutex_);
+      if (data_processors_.find(name) != data_processors_.end()) {
+        data_processors_[name]->ConstructDataStructure(args, key);
+        return;
+      }
     }
-    data_processors_[name]->ConstructDataStructure(args, key);
+    
+    // Need to create new structure - use exclusive lock
+    {
+      std::unique_lock<std::shared_mutex> write_lock(data_processors_mutex_);
+      // Double-check after acquiring write lock
+      if (data_processors_.find(name) == data_processors_.end()) {
+        data_processors_[name] = CreateDataStructure(type);
+      }
+      data_processors_[name]->ConstructDataStructure(args, key);
+    }
   }
+
   void PrintData(const std::wstring &name) {
-    data_processors_[name]->PrintDataStructure();
+    std::shared_lock<std::shared_mutex> lock(data_processors_mutex_);
+    auto it = data_processors_.find(name);
+    if (it != data_processors_.end()) {
+      it->second->PrintDataStructure();
+    }
   }
 
   std::shared_ptr<IDataStructure> GetDataStructure(const std::wstring &name) {
+    std::shared_lock<std::shared_mutex> lock(data_processors_mutex_);
     auto it = data_processors_.find(name);
     if (it != data_processors_.end()) {
       return it->second;
@@ -56,12 +80,20 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
   std::unordered_map<std::wstring, std::shared_ptr<IDataStructure>>
       data_processors_;
   std::unordered_map<std::wstring, std::shared_ptr<IDataStructure>> type_cache_;
-  std::shared_ptr<IDataStructure>
-  CreateDataStructure(const std::wstring &type) {
-    auto type_cache_it = type_cache_.find(type);
-    if (type_cache_it != type_cache_.end()) {
-      return type_cache_it->second;
+  mutable std::shared_mutex data_processors_mutex_;  // Reader-writer lock
+  mutable std::shared_mutex type_cache_mutex_;       // Reader-writer lock
+
+  std::shared_ptr<IDataStructure> CreateDataStructure(const std::wstring &type) {
+    // Try read first (fast path)
+    {
+      std::shared_lock<std::shared_mutex> read_lock(type_cache_mutex_);
+      auto type_cache_it = type_cache_.find(type);
+      if (type_cache_it != type_cache_.end()) {
+        return type_cache_it->second;
+      }
     }
+
+    // Create if not cached (slow path, requires write lock)
     auto self = shared_from_this();
     std::shared_ptr<IDataStructure> ds_instance = nullptr;
     if (type == L"Code") {
@@ -81,7 +113,10 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
     } else if (type == L"ReserveResult") {
       ds_instance = std::make_shared<ReserveResultDataStructure>(self);
     }
+
+    // Cache with write lock if created
     if (ds_instance) {
+      std::unique_lock<std::shared_mutex> write_lock(type_cache_mutex_);
       type_cache_[type] = ds_instance;
     }
     return ds_instance;

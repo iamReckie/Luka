@@ -27,10 +27,10 @@ struct ReserveResultIndex {
   std::vector<std::vector<std::wstring>> STD_NP_Input;
 };
 struct ReserveResult {
-  double tVn_Input[2][120];
-  double Alpha_ALD_Input[2];
-  double NP_beta_Input[2];
-  double STD_NP_Input[2];
+  std::vector<std::vector<double>> tVn_Input;
+  std::vector<double> Alpha_ALD_Input;
+  std::vector<double> NP_beta_Input;
+  std::vector<double> STD_NP_Input;
 };
 
 class ReserveResultDataStructure : public IDataStructure {

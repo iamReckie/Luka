@@ -15,7 +15,9 @@
 #define SRC_DATAPROCESSOR_DATA_PROCESSOR_H_
 #include <any>
 #include <memory>
+#include <stdexcept>
 #include <vector>
+
 class DataHelper;
 class IDataStructure {
  public:
@@ -27,6 +29,15 @@ class IDataStructure {
   virtual ~IDataStructure() = default;
 
  protected:
+  // Safe accessor for data_helper with null check
+  std::shared_ptr<DataHelper> GetDataHelper() const {
+    auto helper = data_helper_.lock();
+    if (!helper) {
+      throw std::runtime_error("DataHelper has been destroyed");
+    }
+    return helper;
+  }
+
   std::weak_ptr<DataHelper> data_helper_;
 };
 class DataProcessor {

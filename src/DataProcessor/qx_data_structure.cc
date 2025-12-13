@@ -18,13 +18,14 @@
 #include <unordered_map>
 #include <vector>
 
+#include "DataProcessor/excel_columns.h"
 #include "Logger/logger.h"
 void QxDataStructure::ConstructDataStructure(const std::vector<std::any>& args,
                                              std::wstring& key) {
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);
   std::wstring key_to_string = L"";
-  if (column == 1) {
+  if (column == QxColumns::FIRST_COLUMN) {
     key = input;
     return;
   }
@@ -35,36 +36,36 @@ void QxDataStructure::ConstructDataStructure(const std::vector<std::any>& args,
   auto& current_qx_table = qx_table_[key];
   std::shared_ptr<QxTable> new_qx_table;
   switch (column) {
-    case 2:
+    case QxColumns::RISK_CLASS:
       new_qx_table = std::make_shared<QxTable>();
       current_qx_table.emplace_back(new_qx_table);
       current_qx_table.back()->risk_class = toInt(input);
       break;
-    case 3:
+    case QxColumns::DRIVER:
       current_qx_table.back()->driver = toInt(input);
       break;
-    case 4:
+    case QxColumns::SUB1:
       current_qx_table.back()->sub1 = toInt(input);
       break;
-    case 5:
+    case QxColumns::SUB2:
       current_qx_table.back()->sub2 = toInt(input);
       break;
-    case 6:
+    case QxColumns::SUB3:
       current_qx_table.back()->sub3 = toInt(input);
       break;
-    case 7:
+    case QxColumns::SUB4:
       current_qx_table.back()->sub4 = toInt(input);
       break;
-    case 8:
+    case QxColumns::AGE:
       current_qx_table.back()->age = toInt(input);
       break;
-    case 9:
+    case QxColumns::MALE:
       current_qx_table.back()->male = toDouble(input);
       break;
-    case 10:
+    case QxColumns::FEMALE:
       current_qx_table.back()->female = toDouble(input);
       break;
-    case 11:
+    case QxColumns::QX_NAME:
       current_qx_table.back()->qx_name = input;
       break;
     default:
