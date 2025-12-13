@@ -18,7 +18,9 @@
 #include <string>
 #include <unordered_map>
 
-#include "CommandProcessor/command_processor.h"
+// Forward declarations
+class BaseCommand;
+class DataHelper;
 
 class CommandFactory {
  public:

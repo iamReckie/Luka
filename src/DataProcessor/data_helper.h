@@ -14,7 +14,6 @@
 #ifndef SRC_DATAPROCESSOR_DATA_HELPER_H_
 #define SRC_DATAPROCESSOR_DATA_HELPER_H_
 #include <any>
-#include <atomic>
 #include <memory>
 #include <shared_mutex>
 #include <unordered_map>

@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 
+#include "Converter/string_utils.h"
+
 #include "Converter/converter.h"
 #include "DataProcessor/data_helper.h"
 #include "DataProcessor/insurance_result_data_structure.h"

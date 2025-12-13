@@ -17,8 +17,8 @@
 #include <memory>
 #include <unordered_map>
 
-#include "../OpenXLSX/OpenXLSX.hpp"
-#include "../yaml-cpp/yaml.h"
+#include <yaml-cpp/yaml.h>
+
 #include "DataProcessor/data_helper.h"
 class ICommand {
  public:

@@ -13,6 +13,6 @@
 // ============================================================================
 #ifndef SRC_CONVERTER_CONVERTER_H_
 #define SRC_CONVERTER_CONVERTER_H_
-#include "Converter/string_utils.h"
+// Legacy header - use string_utils.h directly instead
 
 #endif  // SRC_CONVERTER_CONVERTER_H_

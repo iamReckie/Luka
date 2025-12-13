@@ -18,7 +18,6 @@
 #include <OpenXLSX.hpp>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "CommandProcessor/command_processor.h"
 class ReadExcelCommand : public BaseCommand {

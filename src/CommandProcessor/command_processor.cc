@@ -19,7 +19,6 @@
 #include "CommandProcessor/calc_reserve_expense.h"
 #include "CommandProcessor/read_excel.h"
 #include "CommandProcessor/read_tbl.h"
-#include "Logger/logger.h"
 
 void CommandHelper::RegisterAllCommands() {
   // Pre-register all commands at initialization time (thread-safe: only called in constructor)

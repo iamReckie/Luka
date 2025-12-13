@@ -14,6 +14,7 @@
 #ifndef SRC_CONVERTER_EXCEL_UTILS_H_
 #define SRC_CONVERTER_EXCEL_UTILS_H_
 #include <algorithm>
+#include <sstream>
 #include <string>
 #include <vector>
 

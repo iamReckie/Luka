@@ -15,9 +15,7 @@
 #define SRC_COMMANDPROCESSOR_CALC_INSURANCE_EXPENSE_H_
 #include <yaml-cpp/yaml.h>
 
-#include <OpenXLSX.hpp>
 #include <memory>
-#include <vector>
 
 #include "CommandProcessor/command_processor.h"
 class CalcInsuranceExpenseCommand : public BaseCommand {
