@@ -11,13 +11,15 @@
 //
 // Developed by: Luka
 // ============================================================================
-#include "CommandProcessor/read_excel.h"
+ #include "CommandProcessor/read_excel.h"
 
 #include <OpenXLSX.hpp>
+#include <thread>
 
 #include "Converter/excel_utils.h"
 #include "Converter/string_utils.h"
 #include "Logger/logger.h"
+#include "Utility/thread_pool.h"
 std::wstring
 ReadExcelCommand::get_cell_value(const OpenXLSX::XLCellValue &cell_value) {
   std::wstring type = Ctw(cell_value.typeAsString());
@@ -31,12 +33,29 @@ ReadExcelCommand::get_cell_value(const OpenXLSX::XLCellValue &cell_value) {
     return L"";
   }
 }
+
+void ReadExcelCommand::ProcessRow(OpenXLSX::XLWorksheet wks, int row,
+                                   int col_start, int col_end,
+                                   const std::wstring& sheet_name,
+                                   const std::wstring& sheet_type) {
+  std::wstring key = L"";
+  for (int col = col_start; col <= col_end; col++) {
+    OpenXLSX::XLCellReference cell_ref(row, col);
+    OpenXLSX::XLCellValue cell_value = wks.cell(cell_ref).value();
+    std::wstring cell_string = get_cell_value(cell_value);
+    if (cell_string.empty()) {
+      continue;
+    }
+    std::vector<std::any> args{cell_string, col};
+    data_helper_->ExecuteData(sheet_name, key, sheet_type, args);
+  }
+}
 void ReadExcelCommand::Execute(const YAML::Node &command_data) {
   OpenXLSX::XLDocument doc;
   std::string excel_name = command_data["name"].as<std::string>();
-  std::wstring key = L"";
   Logger::Log(L"Read %ls\n", Ctw(excel_name).c_str());
   doc.open(excel_name);
+
   for (const auto &sheet : command_data["sheets"]) {
     std::wstring sheet_name = Ctw(sheet["name"].as<std::string>()),
                  range = Ctw(sheet["range"].as<std::string>()),
@@ -46,21 +65,20 @@ void ReadExcelCommand::Execute(const YAML::Node &command_data) {
                 sheet_type.c_str());
     ranges = ExcelUtils::ParseExcelRange(range);
     auto wks = doc.workbook().worksheet(Cts(sheet_name));
+
+    // 멀티스레드 처리: ThreadPool 사용
+    ThreadPool pool;
+    int row_count = ranges[1] - ranges[0] + 1;
+    Logger::Log(L"Processing %d rows in parallel\n", row_count);
+
     for (int row = ranges[0]; row <= ranges[1]; row++) {
-      key = L"";
-      for (int col = ranges[2]; col <= ranges[3]; col++) {
-        OpenXLSX::XLCellReference cell_ref(row, col);
-        OpenXLSX::XLCellValue cell_value = wks.cell(cell_ref).value();
-        std::wstring cell_string = get_cell_value(cell_value);
-        if (cell_string.empty()) {
-          continue;
-        }
-        // Logger::log("%s ", cell_string.c_str());
-        std::vector<std::any> args{cell_string, col};
-        data_helper_->ExecuteData(sheet_name, key, sheet_type, args);
-      }
-      // Logger::log("\n");
+      pool.EnqueueTask([this, wks, row, col_start = ranges[2],
+                        col_end = ranges[3], sheet_name, sheet_type]() {
+        ProcessRow(wks, row, col_start, col_end, sheet_name, sheet_type);
+      });
     }
+    // ThreadPool 소멸자에서 모든 작업이 완료될 때까지 대기
+
     data_helper_->PrintData(sheet_name);
   }
 }
