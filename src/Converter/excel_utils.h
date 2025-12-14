@@ -13,41 +13,7 @@
 // ============================================================================
 #ifndef SRC_CONVERTER_EXCEL_UTILS_H_
 #define SRC_CONVERTER_EXCEL_UTILS_H_
-#include <algorithm>
-#include <sstream>
-#include <string>
-#include <vector>
-
-class ExcelUtils {
- public:
-  // Parses Excel range string (e.g., "A1:Z10") into vector of integers
-  // Returns [start_row, end_row, start_col, end_col]
-  static std::vector<int> ParseExcelRange(const std::wstring& input) {
-    std::vector<int> ranges;
-    std::wstringstream ss(input);
-    std::wstring token;
-
-    auto excel_column_to_number = [](const std::wstring& column) -> int {
-      int result = 0;
-      for (char c : column) {
-        result = result * 26 + (c - 'A' + 1);
-      }
-      return result;
-    };
-
-    auto is_numeric = [](const std::wstring& str) -> bool {
-      return !str.empty() && std::all_of(str.begin(), str.end(), ::isdigit);
-    };
-
-    while (std::getline(ss, token, L':')) {
-      if (!is_numeric(token)) {
-        ranges.push_back(excel_column_to_number(token));
-      } else {
-        ranges.push_back(std::stoi(token));
-      }
-    }
-    return ranges;
-  }
-};
+// Deprecated wrapper: use Utility/excel_utils.h instead
+#include "Utility/excel_utils.h"
 
 #endif  // SRC_CONVERTER_EXCEL_UTILS_H_

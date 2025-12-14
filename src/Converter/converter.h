@@ -13,6 +13,7 @@
 // ============================================================================
 #ifndef SRC_CONVERTER_CONVERTER_H_
 #define SRC_CONVERTER_CONVERTER_H_
-// Legacy header - use string_utils.h directly instead
+// Deprecated wrapper: prefer Utility/string_utils.h and Utility/excel_utils.h
+#include "Utility/converter.h"
 
 #endif  // SRC_CONVERTER_CONVERTER_H_

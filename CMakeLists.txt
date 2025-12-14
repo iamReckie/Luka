@@ -22,7 +22,7 @@ add_executable(Luka
     src/SequenceStarter/sequence_starter.cc
     src/SequenceStarter/sequence_starter.h
     src/CommandProcessor/command_processor.cc
-    src/Converter/converter.h
+    src/Utility/converter.h
     ${DATA_PROCESSOR_SOURCES}
     ${COMMAND_PROCESSOR_SOURCES}
 )

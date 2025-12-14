@@ -24,22 +24,18 @@ class DataHelper;
 
 class CommandFactory {
  public:
-  using CommandCreator =
-      std::function<std::shared_ptr<BaseCommand>(std::shared_ptr<DataHelper>)>;
+  using CommandCreator = std::function<std::shared_ptr<BaseCommand>(std::shared_ptr<DataHelper>)>;
 
   static CommandFactory& GetInstance() {
     static CommandFactory instance;
     return instance;
   }
 
-  void RegisterCommand(const std::wstring& command_name,
-                       CommandCreator creator) {
+  void RegisterCommand(const std::wstring& command_name, CommandCreator creator) {
     command_creators_[command_name] = creator;
   }
 
-  std::shared_ptr<BaseCommand> CreateCommand(
-      const std::wstring& command_name,
-      std::shared_ptr<DataHelper> data_helper) {
+  std::shared_ptr<BaseCommand> CreateCommand(const std::wstring& command_name, std::shared_ptr<DataHelper> data_helper) {
     auto it = command_creators_.find(command_name);
     if (it != command_creators_.end()) {
       return it->second(data_helper);

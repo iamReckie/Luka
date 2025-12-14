@@ -16,8 +16,8 @@
 #include <OpenXLSX.hpp>
 #include <thread>
 
-#include "Converter/excel_utils.h"
-#include "Converter/string_utils.h"
+#include "Utility/excel_utils.h"
+#include "Utility/string_utils.h"
 #include "Logger/logger.h"
 #include "Utility/thread_pool.h"
 std::wstring

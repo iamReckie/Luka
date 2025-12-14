@@ -37,7 +37,6 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
 
   void ExecuteData(const std::wstring &name, std::wstring &key, const std::wstring type, const std::vector<std::any> &args) {
     Logger::Log(L"Executing Data Structure: %ls of type: %ls\n", name.c_str(), type.c_str());
-    
     // Double-checked locking pattern with shared_mutex for read-heavy workload
     {
       std::shared_lock<std::shared_mutex> read_lock(data_processors_mutex_);
@@ -46,7 +45,6 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
         return;
       }
     }
-    
     // Need to create new structure - use exclusive lock
     {
       std::unique_lock<std::shared_mutex> write_lock(data_processors_mutex_);
