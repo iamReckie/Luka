@@ -25,22 +25,19 @@
 
 /**
  * @class ThreadPool
- * @brief Lock-free 기반의 간단한 스레드풀 구현
- *
- * C++17 환경에서 효율적인 병렬 처리를 제공합니다.
- * 작업 큐는 mutex로 보호되며, 워커 스레드들이 작업을 가져와 실행합니다.
+ * @brief Lock-free based thread pool
  */
 class ThreadPool {
  public:
   /**
-   * @brief ThreadPool 생성자
-   * @param num_threads 생성할 워커 스레드 개수. 0 또는 지정하지 않으면 하드웨어 동시성 수 사용.
+   * @brief ThreadPool
+   * @param num_threads
    */
   explicit ThreadPool(size_t num_threads = 0) {
     if (num_threads == 0) {
       num_threads = std::thread::hardware_concurrency();
       if (num_threads == 0) {
-        num_threads = 4;  // 기본값
+        num_threads = 4;
       }
     }
 
@@ -50,8 +47,7 @@ class ThreadPool {
   }
 
   /**
-   * @brief ThreadPool 소멸자
-   * 모든 스레드가 종료될 때까지 대기합니다.
+   * @brief ThreadPool Destructor
    */
   ~ThreadPool() {
     {
@@ -68,14 +64,14 @@ class ThreadPool {
   }
 
   /**
-   * @brief 작업을 스레드풀에 추가
-   * @param task 실행할 함수 객체 (std::function<void()>)
+   * @brief Add thread pool task
+   * @param task std::function<void()>)
    */
   void EnqueueTask(std::function<void()> task) {
     {
       std::lock_guard<std::mutex> lock(queue_mutex_);
       if (should_stop_.load(std::memory_order_acquire)) {
-        return;  // 풀이 종료 중이면 작업 거부
+        return;
       }
       task_queue_.push(std::move(task));
     }
@@ -83,21 +79,20 @@ class ThreadPool {
   }
 
   /**
-   * @brief 현재 스레드풀의 워커 스레드 개수
-   * @return 워커 스레드 개수
+   * @brief Get worker thread count
+   * @return Worker thread count
    */
   size_t GetNumWorkers() const { return workers_.size(); }
 
  private:
   /**
-   * @brief 워커 스레드의 메인 루프
-   * 큐에서 작업을 가져와 실행합니다.
+   * @brief Worker main loop
    */
   void WorkerLoop() {
     while (true) {
       std::unique_lock<std::mutex> lock(queue_mutex_);
 
-      // 큐가 비어있고 should_stop이 false일 때까지 대기
+      // Wait for tasks or stop signal
       condition_.wait(lock, [this]() {
         return !task_queue_.empty() ||
                should_stop_.load(std::memory_order_acquire);
@@ -105,18 +100,17 @@ class ThreadPool {
 
       if (should_stop_.load(std::memory_order_acquire) &&
           task_queue_.empty()) {
-        break;  // 종료 신호 + 큐가 비어있으면 루프 탈출
+        break;
       }
 
       if (task_queue_.empty()) {
-        continue;  // 큐가 비어있으면 다시 대기
+        continue;
       }
 
       std::function<void()> task = std::move(task_queue_.front());
       task_queue_.pop();
       lock.unlock();
 
-      // 작업 실행 (뮤텍스 락 없이)
       task();
     }
   }

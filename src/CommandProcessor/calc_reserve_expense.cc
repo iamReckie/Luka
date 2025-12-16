@@ -13,19 +13,13 @@
 // ============================================================================
 #include "CommandProcessor/calc_reserve_expense.h"
 
-#include <fstream>
-#include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include "Utility/string_utils.h"
-
-#include "Utility/converter.h"
-#include "DataProcessor/data_helper.h"
-#include "DataProcessor/insurance_result_data_structure.h"
 #include "DataProcessor/reserve_result_data_structure.h"
 #include "Logger/logger.h"
+#include "Utility/string_utils.h"
 std::vector<std::wstring>
 CalcReserveExpenseCommand::SplitAndConvertToWString(const std::string &input) {
   std::vector<std::wstring> result;

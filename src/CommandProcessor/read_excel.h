@@ -18,20 +18,52 @@
 #include <OpenXLSX.hpp>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "CommandProcessor/command_processor.h"
+
+enum class ExecutionMode {
+  SINGLE_THREAD,
+  MULTI_THREAD,
+  CUDA
+};
+
 class ReadExcelCommand : public BaseCommand {
  public:
   explicit ReadExcelCommand(std::shared_ptr<DataHelper> helper)
-    : BaseCommand(helper) {}
+      : BaseCommand(helper), execution_mode_(ExecutionMode::MULTI_THREAD) {}
+
+  explicit ReadExcelCommand(std::shared_ptr<DataHelper> helper, ExecutionMode mode)
+      : BaseCommand(helper), execution_mode_(mode) {}
+
   void Execute(const YAML::Node& command_data) override;
+  void SetExecutionMode(ExecutionMode mode) { execution_mode_ = mode; }
+  ExecutionMode GetExecutionMode() const { return execution_mode_; }
+
   std::wstring get_cell_value(const OpenXLSX::XLCellValue& cell_value);
 
  private:
-  // 각 행을 병렬로 처리하는 헬퍼 메서드
-  void ProcessRow(OpenXLSX::XLWorksheet wks, int row, int col_start,
-          int col_end, const std::wstring& sheet_name,
-          const std::wstring& sheet_type);
+  ExecutionMode execution_mode_;
+
+  // cells: vector of (column, cell_value)
+  void ProcessRow(const std::vector<std::pair<int, std::wstring>>& cells,
+                  const std::wstring& sheet_name,
+                  const std::wstring& sheet_type);
+
+  void ExecuteSingleThread(OpenXLSX::XLWorksheet& wks,
+                           const std::vector<int>& ranges,
+                           const std::wstring& sheet_name,
+                           const std::wstring& sheet_type);
+
+  void ExecuteMultiThread(OpenXLSX::XLWorksheet& wks,
+                          const std::vector<int>& ranges,
+                          const std::wstring& sheet_name,
+                          const std::wstring& sheet_type);
+
+  void ExecuteCuda(OpenXLSX::XLWorksheet& wks,
+                   const std::vector<int>& ranges,
+                   const std::wstring& sheet_name,
+                   const std::wstring& sheet_type);
 };
 #endif  // SRC_COMMANDPROCESSOR_READ_EXCEL_H_

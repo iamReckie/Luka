@@ -20,8 +20,8 @@
 #include <string>
 
 #include "CommandProcessor/command_processor.h"
-#include "Utility/string_utils.h"
 #include "Logger/logger.h"
+#include "Utility/string_utils.h"
 int StartSequence(int argc, char* argv[]) {
   for (int i = 0; i < argc; i++) {
     printf("%s\n", argv[i]);
@@ -39,11 +39,23 @@ int StartSequence(int argc, char* argv[]) {
     Logger::Log(L"Config file error!");
     return -1;
   }
-  // Run all the commands.
-  for (const auto& item : config["scenario"]) {
-    Logger::Log(L"%ls\n", Ctw(item["command"].as<std::string>()).c_str());
-    command_helper->ExecuteCommand(Ctw(item["command"].as<std::string>()),
-                                   Ctw(item["name"].as<std::string>()), item);
+  // Run all the scenario items (environment or command)
+  for (const auto& item : config) {
+    if (item.first.as<std::string>() == "environment") {
+      // environments
+      // TODO : Not use if else if. Use polymorphism.
+      const auto& env = item.second;
+      if (env["thread_type"]) {
+        std::string thread_type = env["thread_type"].as<std::string>();
+        Logger::Log(L"[ENV] thread_type: %ls\n", Ctw(thread_type).c_str());
+      }
+    } else if (item.first.as<std::string>() == "scenario") {
+      for (const auto& cmd : item.second) {
+        Logger::Log(L"%ls\n", Ctw(cmd["command"].as<std::string>()).c_str());
+        command_helper->ExecuteCommand(Ctw(cmd["command"].as<std::string>()),
+                                       Ctw(cmd["name"].as<std::string>()), cmd);
+      }
+    }
   }
   Logger::Finalize();
   return 0;
