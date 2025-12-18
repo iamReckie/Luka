@@ -52,8 +52,7 @@ void ReadExcelCommand::ExecuteSingleThread(OpenXLSX::XLWorksheet& wks,
                                            const std::vector<int>& ranges,
                                            const std::wstring& sheet_name,
                                            const std::wstring& sheet_type) {
-  Logger::Log(L"Processing %d rows in single thread mode\n",
-              ranges[1] - ranges[0] + 1);
+  Logger::Log(L"Processing %d rows in single thread mode\n", ranges[1] - ranges[0] + 1);
 
   for (int row = ranges[0]; row <= ranges[1]; row++) {
     std::vector<std::pair<int, std::wstring>> row_cells;
@@ -95,7 +94,7 @@ void ReadExcelCommand::ExecuteMultiThread(OpenXLSX::XLWorksheet& wks,
       ProcessRow(row_cells, sheet_name, sheet_type);
     });
   }
-  // ThreadPool 소멸자에서 모든 작업이 완료될 때까지 대기
+  // Wait for all tasks to complete in ThreadPool destructor
 }
 
 void ReadExcelCommand::ExecuteCuda(OpenXLSX::XLWorksheet& wks,
@@ -106,17 +105,17 @@ void ReadExcelCommand::ExecuteCuda(OpenXLSX::XLWorksheet& wks,
               ranges[1] - ranges[0] + 1);
 
 #ifdef CUDA_ENABLED
-  // CUDA 사용 가능 여부 확인
+  // Check CUDA availability
   if (!CudaProcessor::IsCudaAvailable()) {
     Logger::Log(L"CUDA is not available, falling back to multi thread mode\n");
     ExecuteMultiThread(wks, ranges, sheet_name, sheet_type);
     return;
   }
 
-  // CUDA 디바이스 정보 출력
+  // Print CUDA device information
   CudaProcessor::PrintCudaDeviceInfo();
 
-  // 먼저 모든 행 데이터를 메모리로 읽어들임
+  // Read all row data into memory first
   std::vector<std::vector<std::pair<int, std::wstring>>> all_row_data;
   all_row_data.reserve(ranges[1] - ranges[0] + 1);
 
@@ -133,7 +132,7 @@ void ReadExcelCommand::ExecuteCuda(OpenXLSX::XLWorksheet& wks,
     all_row_data.push_back(std::move(row_cells));
   }
 
-  // CUDA로 데이터 처리
+  // Process data with CUDA
   bool cuda_success = CudaProcessor::ProcessRowsWithCuda(all_row_data);
 
   if (!cuda_success) {
@@ -142,14 +141,14 @@ void ReadExcelCommand::ExecuteCuda(OpenXLSX::XLWorksheet& wks,
     return;
   }
 
-  // CUDA 처리 후 결과를 ProcessRow로 전달
+  // Pass results to ProcessRow after CUDA processing
   for (const auto& row_cells : all_row_data) {
     ProcessRow(row_cells, sheet_name, sheet_type);
   }
 
   Logger::Log(L"CUDA processing completed successfully\n");
 #else
-  // CUDA가 비활성화된 경우 multi thread로 fallback
+  // Fall back to multi-thread mode when CUDA is disabled
   Logger::Log(L"CUDA is not enabled in this build, falling back to multi thread mode\n");
   ExecuteMultiThread(wks, ranges, sheet_name, sheet_type);
 #endif
@@ -171,15 +170,16 @@ void ReadExcelCommand::Execute(const YAML::Node& command_data) {
     ranges = ExcelUtils::ParseExcelRange(range);
     auto wks = doc.workbook().worksheet(Cts(sheet_name));
 
-    // 실행 모드에 따라 다른 처리 방식 사용
-    switch (execution_mode_) {
-      case ExecutionMode::SINGLE_THREAD:
+    // Use different processing method depending on execution mode
+    Environments::ExecutionMode execution_mode = Environments::GlobalEnvironment::GetInstance().GetExecutionMode();
+    switch (execution_mode) {
+      case Environments::ExecutionMode::SINGLE_THREAD:
         ExecuteSingleThread(wks, ranges, sheet_name, sheet_type);
         break;
-      case ExecutionMode::MULTI_THREAD:
+      case Environments::ExecutionMode::MULTI_THREAD:
         ExecuteMultiThread(wks, ranges, sheet_name, sheet_type);
         break;
-      case ExecutionMode::CUDA:
+      case Environments::ExecutionMode::CUDA:
         ExecuteCuda(wks, ranges, sheet_name, sheet_type);
         break;
     }

@@ -20,6 +20,7 @@
 #include <string>
 
 #include "CommandProcessor/command_processor.h"
+#include "Environments/environment_parser.h"
 #include "Logger/logger.h"
 #include "Utility/string_utils.h"
 int StartSequence(int argc, char* argv[]) {
@@ -40,16 +41,9 @@ int StartSequence(int argc, char* argv[]) {
     return -1;
   }
   // Run all the scenario items (environment or command)
+  Environments::EnvironmentParser::Parse(config);
   for (const auto& item : config) {
-    if (item.first.as<std::string>() == "environment") {
-      // environments
-      // TODO : Not use if else if. Use polymorphism.
-      const auto& env = item.second;
-      if (env["thread_type"]) {
-        std::string thread_type = env["thread_type"].as<std::string>();
-        Logger::Log(L"[ENV] thread_type: %ls\n", Ctw(thread_type).c_str());
-      }
-    } else if (item.first.as<std::string>() == "scenario") {
+    if (item.first.as<std::string>() == "scenario") {
       for (const auto& cmd : item.second) {
         Logger::Log(L"%ls\n", Ctw(cmd["command"].as<std::string>()).c_str());
         command_helper->ExecuteCommand(Ctw(cmd["command"].as<std::string>()),

@@ -22,30 +22,18 @@
 #include <vector>
 
 #include "CommandProcessor/command_processor.h"
-
-enum class ExecutionMode {
-  SINGLE_THREAD,
-  MULTI_THREAD,
-  CUDA
-};
+#include "Environments/global_environment.h"
 
 class ReadExcelCommand : public BaseCommand {
  public:
   explicit ReadExcelCommand(std::shared_ptr<DataHelper> helper)
-      : BaseCommand(helper), execution_mode_(ExecutionMode::MULTI_THREAD) {}
-
-  explicit ReadExcelCommand(std::shared_ptr<DataHelper> helper, ExecutionMode mode)
-      : BaseCommand(helper), execution_mode_(mode) {}
+      : BaseCommand(helper) {}
 
   void Execute(const YAML::Node& command_data) override;
-  void SetExecutionMode(ExecutionMode mode) { execution_mode_ = mode; }
-  ExecutionMode GetExecutionMode() const { return execution_mode_; }
 
   std::wstring get_cell_value(const OpenXLSX::XLCellValue& cell_value);
 
  private:
-  ExecutionMode execution_mode_;
-
   // cells: vector of (column, cell_value)
   void ProcessRow(const std::vector<std::pair<int, std::wstring>>& cells,
                   const std::wstring& sheet_name,

@@ -20,15 +20,15 @@
 
 namespace CudaProcessor {
 
-// Excel 행 데이터를 CUDA로 병렬 처리
-// row_data: 각 행의 (열 번호, 셀 값) 쌍들
-// Returns: 처리 성공 여부
+// Parallel processing of Excel row data using CUDA
+// row_data: pairs of (column index, cell value) per row
+// Returns: true if processing succeeded, false otherwise
 bool ProcessRowsWithCuda(const std::vector<std::vector<std::pair<int, std::wstring>>>& row_data);
 
-// CUDA 디바이스 사용 가능 여부 확인
+// Check if a CUDA device is available
 bool IsCudaAvailable();
 
-// CUDA 디바이스 정보 출력
+// Print CUDA device information
 void PrintCudaDeviceInfo();
 
 }  // namespace CudaProcessor

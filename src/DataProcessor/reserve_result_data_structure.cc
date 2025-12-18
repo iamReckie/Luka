@@ -40,6 +40,7 @@ void ReserveResultDataStructure::ConstructDataStructure(const std::vector<std::a
       Logger::Log(L"Error: Failed to cast to InsuranceResultDataStructure\n");
       return;
     }
+    /*
     // We need to get nn from insurance data
     for (const auto& _ : insurance_data->GetInsuranceResults()) {
       ReserveResult reserve_result{};
@@ -50,6 +51,7 @@ void ReserveResultDataStructure::ConstructDataStructure(const std::vector<std::a
       reserve_result.STD_NP_Input.assign(2, 0.0);
       reserve_result_data_structure_.emplace_back(reserve_result);
     }
+      */
     Logger::Log(L"Constructing ReserveResultDataStructure with key: %ls, size: %d\n",
                 key.c_str(), static_cast<int>(reserve_result_index.tVn_Input.size()));
   } catch (const std::exception &e) {

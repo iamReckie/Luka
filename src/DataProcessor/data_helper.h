@@ -37,22 +37,36 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
 
   void ExecuteData(const std::wstring &name, std::wstring &key, const std::wstring type, const std::vector<std::any> &args) {
     Logger::Log(L"Executing Data Structure: %ls of type: %ls\n", name.c_str(), type.c_str());
+    std::shared_ptr<IDataStructure> processor = nullptr;
+
     // Double-checked locking pattern with shared_mutex for read-heavy workload
     {
       std::shared_lock<std::shared_mutex> read_lock(data_processors_mutex_);
-      if (data_processors_.find(name) != data_processors_.end()) {
-        data_processors_[name]->ConstructDataStructure(args, key);
-        return;
+      auto it = data_processors_.find(name);
+      if (it != data_processors_.end()) {
+        processor = it->second;
       }
     }
-    // Need to create new structure - use exclusive lock
-    {
+
+    if (!processor) {
+      // Need to create new structure - use exclusive lock
       std::unique_lock<std::shared_mutex> write_lock(data_processors_mutex_);
       // Double-check after acquiring write lock
-      if (data_processors_.find(name) == data_processors_.end()) {
-        data_processors_[name] = CreateDataStructure(type);
+      auto it = data_processors_.find(name);
+      if (it == data_processors_.end()) {
+        processor = CreateDataStructure(type);
+        if (processor) {
+          data_processors_[name] = processor;
+        }
+      } else {
+        processor = it->second;
       }
-      data_processors_[name]->ConstructDataStructure(args, key);
+    }
+
+    if (processor) {
+      processor->ConstructDataStructure(args, key);
+    } else {
+      Logger::Log(L"Error: Failed to create or find data structure: %ls\n", name.c_str());
     }
   }
 
