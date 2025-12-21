@@ -19,7 +19,8 @@
 
 #include "Logger/logger.h"
 void TableDataStructure::ConstructDataStructure(
-    const std::vector<std::any>& args, std::wstring& key) {
+    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+  auto& table_data_structure = std::any_cast<TableDataMap&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   std::wstringstream ss(input);
   std::wstring token;
@@ -38,10 +39,11 @@ void TableDataStructure::ConstructDataStructure(
       break;
     }
   }
-  table_data_structure_[key].emplace_back(numbers);
+  table_data_structure[key].emplace_back(numbers);
 }
-void TableDataStructure::PrintDataStructure() const {
-  for (const auto& [key, value] : table_data_structure_) {
+void TableDataStructure::PrintDataStructure(const std::any& context) const {
+  const auto& table_data_structure = std::any_cast<const TableDataMap&>(context);
+  for (const auto& [key, value] : table_data_structure) {
     Logger::Log(L"Key: %ls\n", key.c_str());
     if (key == L"67868") {
       printf("Hello world!\n");

@@ -171,8 +171,8 @@ void ReadExcelCommand::Execute(const YAML::Node& command_data) {
     auto wks = doc.workbook().worksheet(Cts(sheet_name));
 
     // Use different processing method depending on execution mode
-    Environments::ExecutionMode execution_mode = Environments::GlobalEnvironment::GetInstance().GetExecutionMode();
-    switch (execution_mode) {
+    Environments::ExecutionMode core_type = Environments::GlobalEnvironment::GetInstance().GetCoreType();
+    switch (core_type) {
       case Environments::ExecutionMode::SINGLE_THREAD:
         ExecuteSingleThread(wks, ranges, sheet_name, sheet_type);
         break;

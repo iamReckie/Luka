@@ -25,15 +25,16 @@ enum class ExecutionMode {
 class GlobalEnvironment {
  public:
   static GlobalEnvironment& GetInstance();
-  void SetExecutionMode(ExecutionMode mode);
-  ExecutionMode GetExecutionMode() const;
+
+  void SetCoreType(ExecutionMode type);
+  ExecutionMode GetCoreType() const;
 
   GlobalEnvironment(const GlobalEnvironment&) = delete;
   GlobalEnvironment& operator=(const GlobalEnvironment&) = delete;
 
  private:
   GlobalEnvironment() = default;
-  ExecutionMode execution_mode_ = ExecutionMode::MULTI_THREAD;
+  ExecutionMode core_type_ = ExecutionMode::MULTI_THREAD;
 };
 
 }  // namespace Environments

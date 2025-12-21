@@ -21,7 +21,8 @@
 #include "DataProcessor/excel_columns.h"
 #include "Logger/logger.h"
 void CodeDataStructure::ConstructDataStructure(
-    const std::vector<std::any>& args, std::wstring& key) {
+    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+  auto& code_context = std::any_cast<CodeDataContext&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);
   int key_to_int = 0;
@@ -32,11 +33,11 @@ void CodeDataStructure::ConstructDataStructure(
   if (column == CodeColumns::FIRST_COLUMN) {
     key = input;
     key_to_int = toInt(key);
-    code_table_[key_to_int] = std::make_shared<CodeTable>();
+    code_context.code_table[key_to_int] = std::make_shared<CodeTable>();
     return;
   }
   key_to_int = toInt(key);
-  auto current_code_table = code_table_[key_to_int].get();
+  auto current_code_table = code_context.code_table[key_to_int].get();
   switch (column) {
     case CodeColumns::FIRST_COLUMN:
       break;
@@ -61,19 +62,20 @@ void CodeDataStructure::ConstructDataStructure(
     default:
       if (column > CodeColumns::QX_TABLE_START && column <= CodeColumns::QX_TABLE_END) {
         current_code_table->qx_table_[input];  // default-construct entry
-        table_for_qx_table_[current_index_of_qx_table_++] = input;
+        code_context.table_for_qx_table[code_context.current_index_of_qx_table++] = input;
       } else if (column >= CodeColumns::QX_VALUES_START) {
         int qx_index = (column - CodeColumns::QX_VALUES_START) / 3;
-        if (qx_index < current_index_of_qx_table_) {
-          const std::wstring& qx_name = table_for_qx_table_[qx_index];
+        if (qx_index < code_context.current_index_of_qx_table) {
+          const std::wstring& qx_name = code_context.table_for_qx_table[qx_index];
           current_code_table->qx_table_[qx_name].emplace_back(toDouble(input));
         }
       }
       break;
   }
 }
-void CodeDataStructure::PrintDataStructure() const {
-  for (const auto& entry : code_table_) {
+void CodeDataStructure::PrintDataStructure(const std::any& context) const {
+  const auto& code_context = std::any_cast<const CodeDataContext&>(context);
+  for (const auto& entry : code_context.code_table) {
     int code_index = entry.first;
     auto current_code_table = entry.second.get();
 

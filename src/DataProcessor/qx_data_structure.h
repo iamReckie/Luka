@@ -34,15 +34,16 @@ struct QxTable {
 };
 class QxDataStructure : public IDataStructure {
  public:
+  using QxTableMap =
+      std::unordered_map<std::wstring, std::vector<std::shared_ptr<QxTable>>>;
+
   explicit QxDataStructure(std::shared_ptr<DataHelper> data_helper)
       : IDataStructure(data_helper) {}
-  void ConstructDataStructure(const std::vector<std::any>& args,
+  void ConstructDataStructure(std::any& context,
+                              const std::vector<std::any>& args,
                               std::wstring& key) override;
-  void PrintDataStructure() const override;
-
- private:
-  std::unordered_map<std::wstring, std::vector<std::shared_ptr<QxTable>>>
-      qx_table_;
+  void PrintDataStructure(const std::any& context) const override;
+  std::any CreateContext() const override { return QxTableMap(); }
 };
 
 #endif  // SRC_DATAPROCESSOR_QX_DATA_STRUCTURE_H_

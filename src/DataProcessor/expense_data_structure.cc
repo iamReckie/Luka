@@ -20,7 +20,8 @@
 
 #include "Logger/logger.h"
 void ExpenseDataStructure::ConstructDataStructure(
-    const std::vector<std::any>& args, std::wstring& key) {
+    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+  auto& expense_table = std::any_cast<ExpenseTableMap&>(context);
   int key_to_int{0};
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);
@@ -33,7 +34,7 @@ void ExpenseDataStructure::ConstructDataStructure(
     return std::stod(str);
   };
   key_to_int = toInt(key);
-  auto& current_expense_table = expense_table_[key_to_int];
+  auto& current_expense_table = expense_table[key_to_int];
   std::shared_ptr<ExpenseTable> new_qx_table;
   switch (column) {
     case 2:
@@ -60,8 +61,9 @@ void ExpenseDataStructure::ConstructDataStructure(
       break;
   }
 }
-void ExpenseDataStructure::PrintDataStructure() const {
-  for (const auto& entry : expense_table_) {
+void ExpenseDataStructure::PrintDataStructure(const std::any& context) const {
+  const auto& expense_table = std::any_cast<const ExpenseTableMap&>(context);
+  for (const auto& entry : expense_table) {
     int dnum = entry.first;
     auto current_expense_table = entry.second;
     Logger::Log(L"expense dnum: %d\n", dnum);

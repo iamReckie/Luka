@@ -26,19 +26,20 @@ void EnvironmentParser::Parse(const YAML::Node& config) {
     std::string key = item.first.as<std::string>();
     if (key == "environments" || key == "environment") {
       const auto& env = item.second;
-      if (env["thread_type"]) {
-        std::string thread_type = env["thread_type"].as<std::string>();
-        Logger::Log(L"[ENV] thread_type: %ls\n", Ctw(thread_type).c_str());
 
-        ExecutionMode mode = ExecutionMode::MULTI_THREAD;
-        if (thread_type == "single") {
-          mode = ExecutionMode::SINGLE_THREAD;
-        } else if (thread_type == "multi") {
-          mode = ExecutionMode::MULTI_THREAD;
-        } else if (thread_type == "cuda") {
-          mode = ExecutionMode::CUDA;
+      if (env["core_type"]) {
+        std::string core_type = env["core_type"].as<std::string>();
+        Logger::Log(L"[ENV] core_type: %ls\n", Ctw(core_type).c_str());
+
+        ExecutionMode core_mode = ExecutionMode::MULTI_THREAD;
+        if (core_type == "single") {
+          core_mode = ExecutionMode::SINGLE_THREAD;
+        } else if (core_type == "multi") {
+          core_mode = ExecutionMode::MULTI_THREAD;
+        } else if (core_type == "cuda") {
+          core_mode = ExecutionMode::CUDA;
         }
-        GlobalEnvironment::GetInstance().SetExecutionMode(mode);
+        GlobalEnvironment::GetInstance().SetCoreType(core_mode);
       }
     }
   }

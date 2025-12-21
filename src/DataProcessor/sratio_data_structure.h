@@ -40,15 +40,16 @@ struct SRatioTable {
 };
 class SRatioDataStructure : public IDataStructure {
  public:
+  using SRatioTableMap =
+      std::unordered_map<int, std::vector<std::shared_ptr<SRatioTable>>>;
+
   explicit SRatioDataStructure(std::shared_ptr<DataHelper> data_helper)
       : IDataStructure(data_helper) {}
-  void ConstructDataStructure(const std::vector<std::any>& args,
+  void ConstructDataStructure(std::any& context,
+                              const std::vector<std::any>& args,
                               std::wstring& key) override;
-  void PrintDataStructure() const override;
-
- private:
-  std::unordered_map<int, std::vector<std::shared_ptr<SRatioTable>>>
-      sratio_table_;
+  void PrintDataStructure(const std::any& context) const override;
+  std::any CreateContext() const override { return SRatioTableMap(); }
 };
 
 #endif  // SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_

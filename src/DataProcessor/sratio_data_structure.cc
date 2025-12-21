@@ -20,7 +20,8 @@
 
 #include "Logger/logger.h"
 void SRatioDataStructure::ConstructDataStructure(
-    const std::vector<std::any>& args, std::wstring& key) {
+    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+  auto& sratio_table = std::any_cast<SRatioTableMap&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);
   int key_to_int{0};
@@ -33,7 +34,7 @@ void SRatioDataStructure::ConstructDataStructure(
     return std::stod(str);
   };
   key_to_int = toInt(key);
-  auto& current_sratio_table = sratio_table_[key_to_int];
+  auto& current_sratio_table = sratio_table[key_to_int];
   std::shared_ptr<SRatioTable> new_sratio_table;
   switch (column) {
     case 2:
@@ -94,8 +95,9 @@ void SRatioDataStructure::ConstructDataStructure(
       break;
   }
 }
-void SRatioDataStructure::PrintDataStructure() const {
-  for (const auto& entry : sratio_table_) {
+void SRatioDataStructure::PrintDataStructure(const std::any& context) const {
+  const auto& sratio_table = std::any_cast<const SRatioTableMap&>(context);
+  for (const auto& entry : sratio_table) {
     int dnum = entry.first;
     auto current_sratio_table = entry.second;
     Logger::Log(L"sratio dnum: %d\n", dnum);

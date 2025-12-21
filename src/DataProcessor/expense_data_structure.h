@@ -29,15 +29,16 @@ struct ExpenseTable {
 };
 class ExpenseDataStructure : public IDataStructure {
  public:
+  using ExpenseTableMap =
+      std::unordered_map<int, std::vector<std::shared_ptr<ExpenseTable>>>;
+
   explicit ExpenseDataStructure(std::shared_ptr<DataHelper> data_helper)
       : IDataStructure(data_helper) {}
-  void ConstructDataStructure(const std::vector<std::any>& args,
+  void ConstructDataStructure(std::any& context,
+                              const std::vector<std::any>& args,
                               std::wstring& key) override;
-  void PrintDataStructure() const override;
-
- private:
-  std::unordered_map<int, std::vector<std::shared_ptr<ExpenseTable>>>
-      expense_table_;
+  void PrintDataStructure(const std::any& context) const override;
+  std::any CreateContext() const override { return ExpenseTableMap(); }
 };
 
 #endif  // SRC_DATAPROCESSOR_EXPENSE_DATA_STRUCTURE_H_

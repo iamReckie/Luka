@@ -20,12 +20,8 @@ GlobalEnvironment& GlobalEnvironment::GetInstance() {
   return instance;
 }
 
-void GlobalEnvironment::SetExecutionMode(ExecutionMode mode) {
-  execution_mode_ = mode;
-}
+void GlobalEnvironment::SetCoreType(ExecutionMode type) { core_type_ = type; }
 
-ExecutionMode GlobalEnvironment::GetExecutionMode() const {
-  return execution_mode_;
-}
+ExecutionMode GlobalEnvironment::GetCoreType() const { return core_type_; }
 
 }  // namespace Environments

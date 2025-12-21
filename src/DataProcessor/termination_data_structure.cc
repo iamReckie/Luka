@@ -21,7 +21,8 @@
 
 #include "Logger/logger.h"
 void TerminationDataStructure::ConstructDataStructure(
-    const std::vector<std::any>& args, std::wstring& key) {
+    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+  auto& termination_table = std::any_cast<TerminationTableMap&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);
   int key_to_int{0};
@@ -32,11 +33,11 @@ void TerminationDataStructure::ConstructDataStructure(
   if (column == 2) {
     key = input;
     key_to_int = toInt(key);
-    termination_table_[key_to_int] = std::make_shared<TerminationTable>();
+    termination_table[key_to_int] = std::make_shared<TerminationTable>();
     return;
   }
   key_to_int = toInt(key);
-  auto& current_termination_table = termination_table_[key_to_int];
+  auto& current_termination_table = termination_table[key_to_int];
   switch (column) {
     case 3:
       current_termination_table->ten = toDouble(input);
@@ -103,8 +104,10 @@ void TerminationDataStructure::ConstructDataStructure(
       break;
   }
 }
-void TerminationDataStructure::PrintDataStructure() const {
-  for (const auto& entry : termination_table_) {
+void TerminationDataStructure::PrintDataStructure(const std::any& context) const {
+  const auto& termination_table =
+      std::any_cast<const TerminationTableMap&>(context);
+  for (const auto& entry : termination_table) {
     int termination_index = entry.first;
     auto termination_table = entry.second;
     Logger::Log(L"Termination index : %d\n", termination_index);

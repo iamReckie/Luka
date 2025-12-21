@@ -29,21 +29,21 @@ struct CodeTable {
   int M_count;
   std::unordered_map<std::wstring, std::vector<float>> qx_table_;
 };
+struct CodeDataContext {
+  std::unordered_map<int, std::shared_ptr<CodeTable>> code_table;
+  int current_index_of_qx_table = 0;
+  std::unordered_map<int, std::wstring> table_for_qx_table;
+};
+
 class CodeDataStructure : public IDataStructure {
  public:
   explicit CodeDataStructure(std::shared_ptr<DataHelper> data_helper)
-      : IDataStructure(data_helper), current_index_of_qx_table_(0) {}
-  void ConstructDataStructure(const std::vector<std::any>& args,
+      : IDataStructure(data_helper) {}
+  void ConstructDataStructure(std::any& context,
+                              const std::vector<std::any>& args,
                               std::wstring& key) override;
-  void PrintDataStructure() const override;
-  std::unordered_map<int, std::shared_ptr<CodeTable>> GetDataStructure() const {
-    return code_table_;
-  }
-
- private:
-  std::unordered_map<int, std::shared_ptr<CodeTable>> code_table_;
-  int current_index_of_qx_table_;
-  std::unordered_map<int, std::wstring> table_for_qx_table_;
+  void PrintDataStructure(const std::any& context) const override;
+  std::any CreateContext() const override { return CodeDataContext(); }
 };
 
 #endif  // SRC_DATAPROCESSOR_CODE_DATA_STRUCTURE_H_

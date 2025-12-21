@@ -23,9 +23,11 @@ class IDataStructure {
  public:
   explicit IDataStructure(std::weak_ptr<DataHelper> data_helper)
       : data_helper_(data_helper) {}
-  virtual void ConstructDataStructure(const std::vector<std::any>& args,
+  virtual void ConstructDataStructure(std::any& context,
+                                      const std::vector<std::any>& args,
                                       std::wstring& key) = 0;
-  virtual void PrintDataStructure() const = 0;
+  virtual void PrintDataStructure(const std::any& context) const = 0;
+  virtual std::any CreateContext() const = 0;
   virtual ~IDataStructure() = default;
 
  protected:
@@ -44,15 +46,16 @@ class DataProcessor {
  public:
   explicit DataProcessor(std::shared_ptr<IDataStructure> data_structure)
       : data_structure_(data_structure) {}
-  void ConstructDataStructure(const std::vector<std::any>& args,
+  void ConstructDataStructure(std::any& context,
+                              const std::vector<std::any>& args,
                               std::wstring& key) {
     if (data_structure_) {
-      data_structure_->ConstructDataStructure(args, key);
+      data_structure_->ConstructDataStructure(context, args, key);
     }
   }
-  void PrintDataStructure() {
+  void PrintDataStructure(const std::any& context) {
     if (data_structure_) {
-      data_structure_->PrintDataStructure();
+      data_structure_->PrintDataStructure(context);
     }
   }
   virtual ~DataProcessor() = default;

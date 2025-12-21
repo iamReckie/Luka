@@ -64,17 +64,44 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
     }
 
     if (processor) {
-      processor->ConstructDataStructure(args, key);
+      std::any* context_ptr = nullptr;
+      {
+        std::unique_lock<std::shared_mutex> lock(data_contexts_mutex_);
+        auto it = data_contexts_.find(name);
+        if (it == data_contexts_.end()) {
+          data_contexts_[name] = processor->CreateContext();
+        }
+        context_ptr = &data_contexts_[name];
+      }
+      if (context_ptr) {
+        processor->ConstructDataStructure(*context_ptr, args, key);
+      }
     } else {
       Logger::Log(L"Error: Failed to create or find data structure: %ls\n", name.c_str());
     }
   }
 
   void PrintData(const std::wstring &name) {
-    std::shared_lock<std::shared_mutex> lock(data_processors_mutex_);
-    auto it = data_processors_.find(name);
-    if (it != data_processors_.end()) {
-      it->second->PrintDataStructure();
+    std::shared_ptr<IDataStructure> processor = nullptr;
+    std::any* context_ptr = nullptr;
+    
+    {
+      std::shared_lock<std::shared_mutex> lock(data_processors_mutex_);
+      auto it = data_processors_.find(name);
+      if (it != data_processors_.end()) {
+        processor = it->second;
+      }
+    }
+
+    if (processor) {
+      std::shared_lock<std::shared_mutex> lock(data_contexts_mutex_);
+      auto it = data_contexts_.find(name);
+      if (it != data_contexts_.end()) {
+        // We need to cast away constness of the pointer to match the map iterator, 
+        // but the content is const for PrintDataStructure
+        context_ptr = const_cast<std::any*>(&it->second);
+        processor->PrintDataStructure(*context_ptr);
+      }
     }
   }
 
@@ -87,11 +114,22 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
     return nullptr;
   }
 
+  std::any* GetDataContext(const std::wstring &name) {
+    std::shared_lock<std::shared_mutex> lock(data_contexts_mutex_);
+    auto it = data_contexts_.find(name);
+    if (it != data_contexts_.end()) {
+      return const_cast<std::any*>(&it->second);
+    }
+    return nullptr;
+  }
+
  private:
   std::unordered_map<std::wstring, std::shared_ptr<IDataStructure>>
       data_processors_;
+  std::unordered_map<std::wstring, std::any> data_contexts_;
   std::unordered_map<std::wstring, std::shared_ptr<IDataStructure>> type_cache_;
   mutable std::shared_mutex data_processors_mutex_;  // Reader-writer lock
+  mutable std::shared_mutex data_contexts_mutex_;    // Reader-writer lock
   mutable std::shared_mutex type_cache_mutex_;       // Reader-writer lock
 
   std::shared_ptr<IDataStructure> CreateDataStructure(const std::wstring &type) {

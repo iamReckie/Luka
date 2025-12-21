@@ -34,14 +34,14 @@ struct ReserveResult {
 
 class ReserveResultDataStructure : public IDataStructure {
  public:
+  using ReserveResultList = std::vector<ReserveResult>;
+
   explicit ReserveResultDataStructure(std::shared_ptr<DataHelper> data_helper)
       : IDataStructure(data_helper) {}
-  void ConstructDataStructure(const std::vector<std::any>& args,
+  void ConstructDataStructure(std::any& context,
+                              const std::vector<std::any>& args,
                               std::wstring& key) override;
-  void PrintDataStructure() const override;
-
- private:
-  // std::unordered_map<std::wstring, std::shared_ptr<ReserveResult>>
-  std::vector<ReserveResult> reserve_result_data_structure_;
+  void PrintDataStructure(const std::any& context) const override;
+  std::any CreateContext() const override { return ReserveResultList(); }
 };
 #endif  // SRC_DATAPROCESSOR_RESERVE_RESULT_DATA_STRUCTURE_H_

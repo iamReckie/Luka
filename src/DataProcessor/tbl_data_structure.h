@@ -22,19 +22,16 @@
 #include "DataProcessor/data_processor.h"
 class TableDataStructure : public IDataStructure {
  public:
+  using TableDataMap =
+      std::unordered_map<std::wstring, std::vector<std::vector<int>>>;
+
   explicit TableDataStructure(std::shared_ptr<DataHelper> data_helper)
       : IDataStructure(data_helper) {}
-  void ConstructDataStructure(const std::vector<std::any>& args,
+  void ConstructDataStructure(std::any& context,
+                              const std::vector<std::any>& args,
                               std::wstring& key) override;
-  void PrintDataStructure() const override;
-  std::unordered_map<std::wstring, std::vector<std::vector<int>>>
-  get_data_structure() const {
-    return table_data_structure_;
-  }
-
- private:
-  std::unordered_map<std::wstring, std::vector<std::vector<int>>>
-      table_data_structure_;
+  void PrintDataStructure(const std::any& context) const override;
+  std::any CreateContext() const override { return TableDataMap(); }
 };
 
 #endif  // SRC_DATAPROCESSOR_TBL_DATA_STRUCTURE_H_

@@ -20,8 +20,10 @@
 
 #include "DataProcessor/excel_columns.h"
 #include "Logger/logger.h"
-void QxDataStructure::ConstructDataStructure(const std::vector<std::any>& args,
+void QxDataStructure::ConstructDataStructure(std::any& context,
+                                             const std::vector<std::any>& args,
                                              std::wstring& key) {
+  auto& qx_table = std::any_cast<QxTableMap&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);
   std::wstring key_to_string = L"";
@@ -33,7 +35,7 @@ void QxDataStructure::ConstructDataStructure(const std::vector<std::any>& args,
   auto toDouble = [](const std::wstring& str) -> float {
     return std::stod(str);
   };
-  auto& current_qx_table = qx_table_[key];
+  auto& current_qx_table = qx_table[key];
   std::shared_ptr<QxTable> new_qx_table;
   switch (column) {
     case QxColumns::RISK_CLASS:
@@ -72,8 +74,9 @@ void QxDataStructure::ConstructDataStructure(const std::vector<std::any>& args,
       break;
   }
 }
-void QxDataStructure::PrintDataStructure() const {
-  for (const auto& entry : qx_table_) {
+void QxDataStructure::PrintDataStructure(const std::any& context) const {
+  const auto& qx_table = std::any_cast<const QxTableMap&>(context);
+  for (const auto& entry : qx_table) {
     std::wstring qx_name = entry.first;
     auto current_qx_table = entry.second;
     Logger::Log(L"Qx name: %ls\n", qx_name.c_str());
