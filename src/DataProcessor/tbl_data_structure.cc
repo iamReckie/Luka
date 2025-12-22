@@ -11,15 +11,13 @@
 //
 // Developed by: Luka
 // ============================================================================
-#include "DataProcessor/tbl_data_structure.h"
-
 #include <any>
 #include <sstream>
 #include <string>
 
+#include "DataProcessor/tbl_data_structure.h"
 #include "Logger/logger.h"
-void TableDataStructure::ConstructDataStructure(
-    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+void TableDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   auto& table_data_structure = std::any_cast<TableDataMap&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   std::wstringstream ss(input);

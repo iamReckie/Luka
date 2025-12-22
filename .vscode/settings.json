@@ -1,7 +1,16 @@
 {
   "editor.formatOnSave": true,
+  // C/C++ 파일에 대해 Clang-Format 사용
   "[cpp]": {
-    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+    "editor.defaultFormatter": "xaver.clang-format"
   },
-  "clang-format.style": "file"
+  "[c]": {
+    "editor.defaultFormatter": "xaver.clang-format"
+  },
+  // Clang-Format을 기본 포매터로 지정
+  "editor.defaultFormatter": "xaver.clang-format",
+  // Clang-Format 스타일 파일 사용
+  "clang-format.style": "file",
+  // Clang-Format 실행 파일 경로(필요시 수정)
+  "C_Cpp.clang_format_path": "/usr/bin/clang-format"
 }
