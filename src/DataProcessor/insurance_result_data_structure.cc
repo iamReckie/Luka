@@ -14,77 +14,118 @@
 #include "DataProcessor/insurance_result_data_structure.h"
 
 #include <any>
+#include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-#include "Utility/string_utils.h"
+#include "DataProcessor/code_data_structure.h"
 #include "DataProcessor/data_helper.h"
+#include "DataProcessor/tbl_data_structure.h"
 #include "Logger/logger.h"
-void InsuranceResultDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any> &args, std::wstring &key) {
-  (void)context;
-  // auto& insurance_result = std::any_cast<InsuranceResultList&>(context);
+#include "Utility/string_utils.h"
+
+// Assuming these types based on usage in the project
+using TableDataMap = TableDataStructure::TableDataMap;
+// using CodeDataMap = std::unordered_map<int, std::shared_ptr<CodeData>>; // Removed incorrect alias
+
+void InsuranceResultDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+  auto& insurance_result = std::any_cast<InsuranceResultList&>(context);
+
   try {
-    std::shared_ptr<InsuranceResultIndex> result_index = std::any_cast<std::shared_ptr<InsuranceResultIndex>>(args[0]);
-    std::shared_ptr<DataHelper> data_helper = GetDataHelper();
-    // Note: This part is tricky because it relies on other data structures.
-    // Assuming DataHelper still manages shared instances for read-only access or we need to pass them in context too.
-    // For now, we assume DataHelper returns thread-safe or read-only instances.
-    // However, since we modified other structures to be stateless, GetDataStructure might return a stateless processor
-    // but we need the DATA.
-    // This implies a larger architectural change where DataHelper manages CONTEXTS, not just processors.
-    // But based on the request, I will update the signature and use the context for output.
-    
-    // WARNING: This code assumes TableDataStructure and CodeDataStructure are still usable via DataHelper
-    // but since they are now stateless, they don't hold data.
-    // This part of the code is likely BROKEN by the refactoring unless DataHelper is also updated to manage data contexts.
-    // I will proceed with the mechanical refactoring as requested.
-    
-    auto table_data_processor = std::dynamic_pointer_cast<TableDataStructure>(data_helper->GetDataStructure(key));
-    if (!table_data_processor) {
-      Logger::Log(L"Error: Failed to cast to TableDataStructure for key: %ls\n", key.c_str());
+    if (args.empty()) {
+      Logger::Log(L"Error: Arguments empty for InsuranceResultDataStructure\n");
       return;
     }
-    
-    // We need the actual data from somewhere. Since the previous design had data inside the processor,
-    // and now it's external, we can't get it from the processor anymore.
-    // This requires a significant change in how data is accessed across modules.
-    // For this specific file, I will comment out the logic that depends on external data state 
-    // or assume there's a way to get it (which currently there isn't in the provided context).
-    
-    // ... Logic to get table_data and code_data values ...
-    // Since I cannot fix the cross-module data dependency without changing DataHelper significantly,
-    // I will update the method signature and use the context for the output vector.
-    
-    /* 
-       The original logic iterated over table_data->get_data_structure().
-       Since TableDataStructure no longer has get_data_structure(), this logic is invalid.
-       
-       To fix this properly, the 'context' passed here should probably contain references to the 
-       Table and Code data contexts needed for calculation, OR DataHelper needs to provide access to them.
-    */
+    std::shared_ptr<InsuranceResultIndex> result_index = std::any_cast<std::shared_ptr<InsuranceResultIndex>>(args[0]);
+    if (!result_index) {
+      Logger::Log(L"Error: result_index is null\n");
+      return;
+    }
+    std::shared_ptr<DataHelper> data_helper = GetDataHelper();
 
-    // Placeholder for the logic that would populate insurance_result
-    // insurance_result.emplace_back(result);
+    if (!data_helper) {
+      Logger::Log(L"Error: DataHelper is null\n");
+      return;
+    }
 
-  } catch (const std::exception &e) {
+    // Get Table Data Context
+    std::any* table_data_any = data_helper->GetDataContext(key);
+    if (!table_data_any) {
+      Logger::Log(L"Error: Table data context not found for key: %ls\n", key.c_str());
+      return;
+    }
+
+    // Get Code Data Context
+    std::any* code_data_any = data_helper->GetDataContext(L"Code");
+    if (!code_data_any) {
+      Logger::Log(L"Error: Code data context not found\n");
+      return;
+    }
+
+    // Cast to expected types
+    const auto& table_data = std::any_cast<const TableDataMap&>(*table_data_any);
+    const auto& code_context = std::any_cast<const CodeDataContext&>(*code_data_any);
+    const auto& code_map = code_context.code_table;
+
+    for (const auto& iter1 : table_data) {
+      for (const auto& iter2 : iter1.second) {
+        std::shared_ptr<InsuranceResult> result = std::make_shared<InsuranceResult>();
+        result->GP_Input.resize(10, std::vector<int>(10, 0));
+        // Map fields using result_index
+        result->bojong = iter2[result_index->bojong];
+        result->nn = iter2[result_index->nn];
+        result->mm = iter2[result_index->mm];
+        result->x = iter2[result_index->x];
+        result->AMT = iter2[result_index->AMT];
+
+        // Map GP_Input
+        if (!result_index->GP_Input.empty() && result_index->GP_Input[0].size() >= 3) {
+          int r = result_index->GP_Input[0][0];
+          int c = result_index->GP_Input[0][1];
+          int val_idx = result_index->GP_Input[0][2];
+
+          if (r >= 0 && r < 10 && c >= 0 && c < 10 && val_idx >= 0 && val_idx < (int)iter2.size()) {
+            result->GP_Input[r][c] = iter2[val_idx];
+          }
+        }
+
+        // Map dnum from CodeData
+        auto code_it = code_map.find(result->bojong);
+        if (code_it != code_map.end()) {
+          result->dnum = code_it->second->dnum;
+        } else {
+          result->dnum = 0;
+        }
+
+        insurance_result.emplace_back(result);
+      }
+    }
+
+  } catch (const std::bad_any_cast& e) {
+    Logger::Log(L"Error: Bad any_cast in ConstructDataStructure: %ls. Check data types.\n", Ctw(e.what()).c_str());
+  } catch (const std::exception& e) {
     Logger::Log(L"Error in ConstructDataStructure: %ls\n", Ctw(e.what()).c_str());
   }
 }
+
 void InsuranceResultDataStructure::PrintDataStructure(const std::any& context) const {
-  const auto& insurance_result = std::any_cast<const InsuranceResultList&>(context);
-  for (const auto &insurance_result_ : insurance_result) {
-    Logger::Log(
-        L"InsuranceResult: bojong: %d, dnum: %d, nn: %d, mm: %d, x: %d, AMT: %d\n",
-        insurance_result_->bojong, insurance_result_->dnum, insurance_result_->nn,
-        insurance_result_->mm, insurance_result_->x, insurance_result_->AMT);
-    for (size_t i = 0; i < insurance_result_->GP_Input.size(); ++i) {
-      for (size_t j = 0; j < insurance_result_->GP_Input[i].size(); ++j) {
-        if (insurance_result_->GP_Input[i][j] == 0) {
-          continue;
+  try {
+    const auto& insurance_result = std::any_cast<const InsuranceResultList&>(context);
+    for (const auto& result : insurance_result) {
+      Logger::Log(
+          L"InsuranceResult: bojong: %d, dnum: %d, nn: %d, mm: %d, x: %d, AMT: %d\n",
+          result->bojong, result->dnum, result->nn, result->mm, result->x, result->AMT);
+      for (int i = 0; i < 10; ++i) {
+        for (int j = 0; j < 10; ++j) {
+          if (result->GP_Input[i][j] == 0) {
+            continue;
+          }
+          Logger::Log(L"GP_Input[%d][%d]: %d\n", i, j, result->GP_Input[i][j]);
         }
-        Logger::Log(L"  GP_Input[%zu][%zu]: %d\n", i, j,
-                    insurance_result_->GP_Input[i][j]);
       }
     }
+  } catch (const std::exception& e) {
+    Logger::Log(L"Error in PrintDataStructure: %ls\n", Ctw(e.what()).c_str());
   }
 }

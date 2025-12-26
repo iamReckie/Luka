@@ -88,6 +88,5 @@ void CalcReserveExpenseCommand::Execute(const YAML::Node &command_data) {
     }
   }
   std::vector<std::any> args = {reserve_result_index};
-  data_helper_->ExecuteData(file_name + L"ReserveResult", file_name,
-                            L"ReserveResult", args);
+  data_helper_->ExecuteData(file_name + L"ReserveResult", file_name, L"ReserveResult", args);
 }

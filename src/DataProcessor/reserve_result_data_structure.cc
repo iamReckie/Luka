@@ -11,21 +11,21 @@
 //
 // Developed by: Luka
 // ============================================================================
+#include "DataProcessor/reserve_result_data_structure.h"
+
 #include <any>
 #include <string>
 #include <vector>
 
 #include "DataProcessor/data_helper.h"
-#include "DataProcessor/reserve_result_data_structure.h"
+#include "DataProcessor/tbl_data_structure.h"
 #include "Logger/logger.h"
 #include "Utility/string_utils.h"
-void ReserveResultDataStructure::ConstructDataStructure(
-    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+void ReserveResultDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   auto& reserve_result_data_structure =
       std::any_cast<ReserveResultList&>(context);
   try {
-    ReserveResultIndex reserve_result_index =
-        std::any_cast<ReserveResultIndex>(args[0]);
+    ReserveResultIndex reserve_result_index = std::any_cast<ReserveResultIndex>(args[0]);
     std::shared_ptr<DataHelper> data_helper = GetDataHelper();
 
     // 1. Get Table Data Context
