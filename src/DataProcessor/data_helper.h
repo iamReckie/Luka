@@ -15,7 +15,9 @@
 #define SRC_DATAPROCESSOR_DATA_HELPER_H_
 #include <any>
 #include <atomic>
+#include <filesystem>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -136,7 +138,15 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
       auto ctx_it = current_registry->contexts.find(name);
       if (ctx_it != current_registry->contexts.end()) {
         // Safe to read from the snapshot
+        std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
+        std::string str_name = converter.to_bytes(name);
+
+        std::filesystem::create_directories("regression");
+        Logger::StartSecondaryLog("regression/" + str_name + ".log");
+
         proc_it->second->PrintDataStructure(const_cast<std::any &>(ctx_it->second));
+
+        Logger::StopSecondaryLog();
       }
     }
   }

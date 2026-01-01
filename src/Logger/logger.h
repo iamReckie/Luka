@@ -46,6 +46,9 @@ class Logger {
     if (GetInstance().file_stream_.is_open()) {
       GetInstance().file_stream_ << str_buffer << std::flush;
     }
+    if (GetThreadLocalStream().is_open()) {
+      GetThreadLocalStream() << str_buffer << std::flush;
+    }
     printf("%s", str_buffer.c_str());
   }
 
@@ -64,7 +67,23 @@ class Logger {
     if (GetInstance().file_stream_.is_open()) {
       GetInstance().file_stream_ << buffer << std::flush;
     }
+    if (GetThreadLocalStream().is_open()) {
+      GetThreadLocalStream() << buffer << std::flush;
+    }
     printf("%s", buffer);
+  }
+
+  static void StartSecondaryLog(const std::string& file_name) {
+    if (GetThreadLocalStream().is_open()) {
+      GetThreadLocalStream().close();
+    }
+    GetThreadLocalStream().open(file_name, std::ios::out);
+  }
+
+  static void StopSecondaryLog() {
+    if (GetThreadLocalStream().is_open()) {
+      GetThreadLocalStream().close();
+    }
   }
 
   static void Initialize(const std::string& file_name) {
@@ -90,6 +109,11 @@ class Logger {
   static Logger& GetInstance() {
     static Logger instance;
     return instance;
+  }
+
+  static std::ofstream& GetThreadLocalStream() {
+    static thread_local std::ofstream stream;
+    return stream;
   }
 
   std::atomic<bool> is_initialized_{false};

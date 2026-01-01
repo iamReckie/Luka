@@ -20,8 +20,7 @@
 
 #include "DataProcessor/excel_columns.h"
 #include "Logger/logger.h"
-void CodeDataStructure::ConstructDataStructure(
-    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+void CodeDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   auto& code_context = std::any_cast<CodeDataContext&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);

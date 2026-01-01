@@ -22,8 +22,13 @@
 #include "Logger/logger.h"
 #include "Utility/string_utils.h"
 void ReserveResultDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
-  auto& reserve_result_data_structure =
-      std::any_cast<ReserveResultList&>(context);
+  auto& reserve_result_context = std::any_cast<ReserveResultContext&>(context);
+  if (!reserve_result_context.result) {
+    reserve_result_context.result = std::make_shared<ReserveResult>();
+    reserve_result_context.result->tVn_Input.resize(2);
+  }
+  auto& result = reserve_result_context.result;
+
   try {
     ReserveResultIndex reserve_result_index = std::any_cast<ReserveResultIndex>(args[0]);
     std::shared_ptr<DataHelper> data_helper = GetDataHelper();
@@ -76,6 +81,7 @@ void ReserveResultDataStructure::ConstructDataStructure(std::any& context, const
     int idx_tVn_2_loop = -1, idx_tVn_2_end = -1;
     int idx_NP_1 = -1, idx_NP_2 = -1;
     int idx_Alpha_1 = -1, idx_Alpha_2 = -1;
+    int idx_STD_NP_1 = -1, idx_STD_NP_2 = -1;
 
     if (reserve_result_index.tVn_Input.size() > 0 && reserve_result_index.tVn_Input[0].size() > 0) {
       idx_tVn_1_loop = parseIndex(reserve_result_index.tVn_Input[0][0]);
@@ -105,44 +111,15 @@ void ReserveResultDataStructure::ConstructDataStructure(std::any& context, const
       idx_Alpha_2 = parseIndex(reserve_result_index.Alpha_ALD_Input[1][0]);
     }
 
-    // Fallback to hardcoded if parsing failed (or for safety during dev)
-    // Based on user prompt: 15, 19, 17, 18, 21, 22, 16, 20
-    if (idx_tVn_1_loop == -1) {
-      idx_tVn_1_loop = 15;
+    if (reserve_result_index.STD_NP_Input.size() > 0 && reserve_result_index.STD_NP_Input[0].size() > 0) {
+      idx_STD_NP_1 = parseIndex(reserve_result_index.STD_NP_Input[0][0]);
     }
-    if (idx_tVn_2_loop == -1) {
-      idx_tVn_2_loop = 19;
-    }
-    if (idx_NP_1 == -1) {
-      idx_NP_1 = 17;
-    }
-    if (idx_Alpha_1 == -1) {
-      idx_Alpha_1 = 18;
-    }
-    if (idx_NP_2 == -1) {
-      idx_NP_2 = 21;
-    }
-    if (idx_Alpha_2 == -1) {
-      idx_Alpha_2 = 22;
-    }
-    if (idx_tVn_1_end == -1) {
-      idx_tVn_1_end = 16;
-    }
-    if (idx_tVn_2_end == -1) {
-      idx_tVn_2_end = 20;
+    if (reserve_result_index.STD_NP_Input.size() > 1 && reserve_result_index.STD_NP_Input[1].size() > 0) {
+      idx_STD_NP_2 = parseIndex(reserve_result_index.STD_NP_Input[1][0]);
     }
 
     for (const auto& insurance_result : insurance_results) {
-      ReserveResult reserve_result{};
       int nn = insurance_result->nn;
-
-      // Initialize vectors
-      reserve_result.tVn_Input.resize(2);
-      reserve_result.tVn_Input[0].resize(nn + 1);  // +1 for the end value
-      reserve_result.tVn_Input[1].resize(nn + 1);
-
-      reserve_result.NP_beta_Input.resize(2);
-      reserve_result.Alpha_ALD_Input.resize(2);
 
       // Loop kk = 0 to nn - 1
       for (int kk = 0; kk < nn; ++kk) {
@@ -152,53 +129,103 @@ void ReserveResultDataStructure::ConstructDataStructure(std::any& context, const
 
         const auto& row = varTemp1[kk];
 
-        reserve_result.tVn_Input[0][kk] = getValue(row, idx_tVn_1_loop);
-        reserve_result.tVn_Input[1][kk] = getValue(row, idx_tVn_2_loop);
+        if (idx_tVn_1_loop != -1) {
+          result->tVn_Input[0].push_back(getValue(row, idx_tVn_1_loop));
+          result->tVn_Input[1].push_back(getValue(row, idx_tVn_2_loop));
+        }
 
         if (kk == 0) {
-          reserve_result.NP_beta_Input[0] = getValue(row, idx_NP_1);
-          reserve_result.Alpha_ALD_Input[0] = getValue(row, idx_Alpha_1);
-          reserve_result.NP_beta_Input[1] = getValue(row, idx_NP_2);
-          reserve_result.Alpha_ALD_Input[1] = getValue(row, idx_Alpha_2);
+          if (idx_Alpha_1 != -1) {
+            result->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_1));
+            result->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_2));
+          }
+          if (idx_NP_1 != -1) {
+            result->NP_beta_Input.push_back(getValue(row, idx_NP_1));
+            result->NP_beta_Input.push_back(getValue(row, idx_NP_2));
+          }
         }
+        if (idx_STD_NP_1 != -1) {
+          result->STD_NP_Input.push_back(getValue(row, idx_STD_NP_1));
+          result->STD_NP_Input.push_back(getValue(row, idx_STD_NP_2));
+        }
+        continue;
       }
-
-      // Handle the end value (kk = nn case in VBA logic, or just the last assignment)
-      // tVn_Input(1, nn) = varTemp1(16)
-      // We need to access the row corresponding to nn? Or is it the same row?
-      // The VBA loop was `For kk = 0 To nn - 1`.
-      // The assignment `tVn_Input(1, nn) = varTemp1(16)` is likely OUTSIDE the loop or for the last element.
-      // If it's outside the loop, which row of varTemp1 do we use?
-      // If varTemp1 has size >= nn, maybe row nn?
-      // Or maybe it uses the last processed row?
-      // User said: "If kk = nn - 1 Then ... tVn_Input(1, nn) = varTemp1(16)"
-      // Wait, if it's inside the loop "If kk = nn - 1", then it uses the row `nn-1`.
-      // Let's re-read carefully: "For kk = 0 To nn - 1 ... tVn_Input(1, kk) = varTemp1(15) ... If kk = nn - 1 Then tVn_Input(1, nn) = varTemp1(16)"
-      // So it uses the row `nn-1` (the last iteration of the loop) to populate `tVn_Input(1, nn)`.
 
       if (nn > 0 && nn - 1 < static_cast<int>(varTemp1.size())) {
         const auto& last_row = varTemp1[nn - 1];
-        reserve_result.tVn_Input[0][nn] = getValue(last_row, idx_tVn_1_end);
-        reserve_result.tVn_Input[1][nn] = getValue(last_row, idx_tVn_2_end);
+        result->tVn_Input[0].push_back(getValue(last_row, idx_tVn_1_end));
+        result->tVn_Input[1].push_back(getValue(last_row, idx_tVn_2_end));
       }
-
-      reserve_result_data_structure.emplace_back(reserve_result);
     }
 
-    Logger::Log(L"Constructing ReserveResultDataStructure with key: %ls, size: %d\n",
-                key.c_str(), static_cast<int>(reserve_result_data_structure.size()));
+    Logger::Log(L"Constructing ReserveResultDataStructure with key: %ls\n", key.c_str());
   } catch (const std::exception& e) {
     Logger::Log(L"Error in ReserveResultDataStructure::ConstructDataStructure: %ls\n", Ctw(e.what()).c_str());
   }
 }
 
 void ReserveResultDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
-  auto& target_list = std::any_cast<ReserveResultList&>(target);
-  const auto& source_list = std::any_cast<const ReserveResultList&>(source);
-  target_list.insert(target_list.end(), source_list.begin(), source_list.end());
+  auto& target_ctx = std::any_cast<ReserveResultContext&>(target);
+  const auto& source_ctx = std::any_cast<const ReserveResultContext&>(source);
+
+  if (!source_ctx.result) {
+    return;
+  }
+  if (!target_ctx.result) {
+    target_ctx.result = std::make_shared<ReserveResult>();
+    target_ctx.result->tVn_Input.resize(2);
+  }
+
+  auto& t_res = target_ctx.result;
+  const auto& s_res = source_ctx.result;
+
+  if (s_res->tVn_Input.size() >= 2) {
+    t_res->tVn_Input[0].insert(t_res->tVn_Input[0].end(), s_res->tVn_Input[0].begin(), s_res->tVn_Input[0].end());
+    t_res->tVn_Input[1].insert(t_res->tVn_Input[1].end(), s_res->tVn_Input[1].begin(), s_res->tVn_Input[1].end());
+  }
+
+  t_res->Alpha_ALD_Input.insert(t_res->Alpha_ALD_Input.end(), s_res->Alpha_ALD_Input.begin(), s_res->Alpha_ALD_Input.end());
+  t_res->NP_beta_Input.insert(t_res->NP_beta_Input.end(), s_res->NP_beta_Input.begin(), s_res->NP_beta_Input.end());
+  t_res->STD_NP_Input.insert(t_res->STD_NP_Input.end(), s_res->STD_NP_Input.begin(), s_res->STD_NP_Input.end());
 }
 
 void ReserveResultDataStructure::PrintDataStructure(const std::any& context) const {
-  (void)context;
+  const auto& reserve_context = std::any_cast<const ReserveResultContext&>(context);
+  if (!reserve_context.result) {
+    Logger::Log(L"ReserveResultDataStructure is empty.\n");
+    return;
+  }
+  const auto& result = reserve_context.result;
+
   Logger::Log(L"ReserveResultDataStructure contents:\n");
+
+  Logger::Log(L"  tVn_Input (Row 0): ");
+  for (double val : result->tVn_Input[0]) {
+    Logger::Log(L"%.2f ", val);
+  }
+  Logger::Log(L"\n");
+
+  Logger::Log(L"  tVn_Input (Row 1): ");
+  for (double val : result->tVn_Input[1]) {
+    Logger::Log(L"%.2f ", val);
+  }
+  Logger::Log(L"\n");
+
+  Logger::Log(L"  Alpha_ALD_Input: ");
+  for (double val : result->Alpha_ALD_Input) {
+    Logger::Log(L"%.2f ", val);
+  }
+  Logger::Log(L"\n");
+
+  Logger::Log(L"  NP_beta_Input: ");
+  for (double val : result->NP_beta_Input) {
+    Logger::Log(L"%.2f ", val);
+  }
+  Logger::Log(L"\n");
+
+  Logger::Log(L"  STD_NP_Input: ");
+  for (double val : result->STD_NP_Input) {
+    Logger::Log(L"%.2f ", val);
+  }
+  Logger::Log(L"\n");
 }

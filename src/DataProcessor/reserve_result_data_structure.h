@@ -32,10 +32,12 @@ struct ReserveResult {
   std::vector<double> STD_NP_Input;
 };
 
+struct ReserveResultContext {
+  std::shared_ptr<ReserveResult> result;
+};
+
 class ReserveResultDataStructure : public IDataStructure {
  public:
-  using ReserveResultList = std::vector<ReserveResult>;
-
   explicit ReserveResultDataStructure(std::shared_ptr<DataHelper> data_helper)
       : IDataStructure(data_helper) {}
   void ConstructDataStructure(std::any& context,
@@ -43,6 +45,6 @@ class ReserveResultDataStructure : public IDataStructure {
                               std::wstring& key) override;
   void MergeDataStructure(std::any& target, const std::any& source) override;
   void PrintDataStructure(const std::any& context) const override;
-  std::any CreateContext() const override { return ReserveResultList(); }
+  std::any CreateContext() const override { return ReserveResultContext(); }
 };
 #endif  // SRC_DATAPROCESSOR_RESERVE_RESULT_DATA_STRUCTURE_H_

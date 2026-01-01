@@ -42,6 +42,7 @@ void CalcReserveExpenseCommand::Execute(const YAML::Node &command_data) {
   // std::unique_ptr<ReserveResultIndex> reserve_result_index =
   //     std::shared_unique<ReserveResultIndex>();
   ReserveResultIndex reserve_result_index;
+  // insert key of table first
   // Start making yaml data structure
   if (command_data["variables"]) {
     for (const auto &var : command_data["variables"]) {
@@ -89,4 +90,5 @@ void CalcReserveExpenseCommand::Execute(const YAML::Node &command_data) {
   }
   std::vector<std::any> args = {reserve_result_index};
   data_helper_->ExecuteData(file_name + L"ReserveResult", file_name, L"ReserveResult", args);
+  data_helper_->PrintData(file_name + L"ReserveResult");
 }
