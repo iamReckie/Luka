@@ -74,6 +74,17 @@ void QxDataStructure::ConstructDataStructure(std::any& context,
       break;
   }
 }
+
+void QxDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
+  auto& target_map = std::any_cast<QxTableMap&>(target);
+  const auto& source_map = std::any_cast<const QxTableMap&>(source);
+
+  for (const auto& [key, val] : source_map) {
+    auto& target_vec = target_map[key];
+    target_vec.insert(target_vec.end(), val.begin(), val.end());
+  }
+}
+
 void QxDataStructure::PrintDataStructure(const std::any& context) const {
   const auto& qx_table = std::any_cast<const QxTableMap&>(context);
   for (const auto& entry : qx_table) {

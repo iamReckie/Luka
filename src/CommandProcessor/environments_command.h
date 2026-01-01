@@ -11,18 +11,18 @@
 //
 // Developed by: Luka
 // ============================================================================
-#ifndef SRC_ENVIRONMENTS_ENVIRONMENT_PARSER_H_
-#define SRC_ENVIRONMENTS_ENVIRONMENT_PARSER_H_
+#ifndef SRC_COMMANDPROCESSOR_ENVIRONMENTS_COMMAND_H_
+#define SRC_COMMANDPROCESSOR_ENVIRONMENTS_COMMAND_H_
 
-#include <yaml-cpp/yaml.h>
+#include <memory>
 
-namespace Environments {
+#include "CommandProcessor/command_processor.h"
 
-class EnvironmentParser {
+class EnvironmentsCommand : public BaseCommand {
  public:
-  static void Parse(const YAML::Node& config);
+  explicit EnvironmentsCommand(std::shared_ptr<DataHelper> helper)
+      : BaseCommand(helper) {}
+  void Execute(const YAML::Node& command_data) override;
 };
 
-}  // namespace Environments
-
-#endif  // SRC_ENVIRONMENTS_ENVIRONMENT_PARSER_H_
+#endif  // SRC_COMMANDPROCESSOR_ENVIRONMENTS_COMMAND_H_

@@ -85,7 +85,7 @@ void InsuranceResultDataStructure::ConstructDataStructure(std::any& context, con
           int c = result_index->GP_Input[0][1];
           int val_idx = result_index->GP_Input[0][2];
 
-          if (r >= 0 && r < 10 && c >= 0 && c < 10 && val_idx >= 0 && val_idx < (int)iter2.size()) {
+          if (r >= 0 && r < 10 && c >= 0 && c < 10 && val_idx >= 0 && val_idx < static_cast<int>(iter2.size())) {
             result->GP_Input[r][c] = iter2[val_idx];
           }
         }
@@ -107,6 +107,12 @@ void InsuranceResultDataStructure::ConstructDataStructure(std::any& context, con
   } catch (const std::exception& e) {
     Logger::Log(L"Error in ConstructDataStructure: %ls\n", Ctw(e.what()).c_str());
   }
+}
+
+void InsuranceResultDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
+  auto& target_list = std::any_cast<InsuranceResultList&>(target);
+  const auto& source_list = std::any_cast<const InsuranceResultList&>(source);
+  target_list.insert(target_list.end(), source_list.begin(), source_list.end());
 }
 
 void InsuranceResultDataStructure::PrintDataStructure(const std::any& context) const {

@@ -73,6 +73,16 @@ void CodeDataStructure::ConstructDataStructure(
       break;
   }
 }
+
+void CodeDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
+  auto& target_ctx = std::any_cast<CodeDataContext&>(target);
+  const auto& source_ctx = std::any_cast<const CodeDataContext&>(source);
+
+  for (const auto& [key, val] : source_ctx.code_table) {
+    target_ctx.code_table[key] = val;
+  }
+}
+
 void CodeDataStructure::PrintDataStructure(const std::any& context) const {
   const auto& code_context = std::any_cast<const CodeDataContext&>(context);
   for (const auto& entry : code_context.code_table) {

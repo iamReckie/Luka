@@ -46,6 +46,7 @@ class InsuranceResultDataStructure : public IDataStructure {
   void ConstructDataStructure(std::any& context,
                               const std::vector<std::any>& args,
                               std::wstring& key) override;
+  void MergeDataStructure(std::any& target, const std::any& source) override;
   void PrintDataStructure(const std::any& context) const override;
   std::any CreateContext() const override { return InsuranceResultList(); }
 };

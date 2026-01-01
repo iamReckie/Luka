@@ -17,11 +17,14 @@
 
 #include "CommandProcessor/calc_insurance_expense.h"
 #include "CommandProcessor/calc_reserve_expense.h"
+#include "CommandProcessor/environments_command.h"
 #include "CommandProcessor/read_excel.h"
 #include "CommandProcessor/read_tbl.h"
 
 void CommandHelper::RegisterAllCommands() {
   // Pre-register all commands at initialization time (thread-safe: only called in constructor)
+  command_instances_[L"environments"] =
+      std::make_shared<EnvironmentsCommand>(data_helper_);
   command_instances_[L"read_excel"] =
       std::make_shared<ReadExcelCommand>(data_helper_);
   command_instances_[L"read_tbl"] =

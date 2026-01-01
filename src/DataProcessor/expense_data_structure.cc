@@ -61,6 +61,17 @@ void ExpenseDataStructure::ConstructDataStructure(
       break;
   }
 }
+
+void ExpenseDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
+  auto& target_map = std::any_cast<ExpenseTableMap&>(target);
+  const auto& source_map = std::any_cast<const ExpenseTableMap&>(source);
+
+  for (const auto& [key, val] : source_map) {
+    auto& target_vec = target_map[key];
+    target_vec.insert(target_vec.end(), val.begin(), val.end());
+  }
+}
+
 void ExpenseDataStructure::PrintDataStructure(const std::any& context) const {
   const auto& expense_table = std::any_cast<const ExpenseTableMap&>(context);
   for (const auto& entry : expense_table) {

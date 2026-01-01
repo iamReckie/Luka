@@ -22,7 +22,6 @@
 #include <vector>
 
 #include "CommandProcessor/command_processor.h"
-#include "Environments/global_environment.h"
 
 class ReadExcelCommand : public BaseCommand {
  public:
@@ -37,7 +36,8 @@ class ReadExcelCommand : public BaseCommand {
   // cells: vector of (column, cell_value)
   void ProcessRow(const std::vector<std::pair<int, std::wstring>>& cells,
                   const std::wstring& sheet_name,
-                  const std::wstring& sheet_type);
+                  const std::wstring& sheet_type,
+                  std::any* context = nullptr);
 
   void ExecuteSingleThread(OpenXLSX::XLWorksheet& wks,
                            const std::vector<int>& ranges,

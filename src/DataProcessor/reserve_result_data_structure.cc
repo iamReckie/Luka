@@ -191,6 +191,13 @@ void ReserveResultDataStructure::ConstructDataStructure(std::any& context, const
     Logger::Log(L"Error in ReserveResultDataStructure::ConstructDataStructure: %ls\n", Ctw(e.what()).c_str());
   }
 }
+
+void ReserveResultDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
+  auto& target_list = std::any_cast<ReserveResultList&>(target);
+  const auto& source_list = std::any_cast<const ReserveResultList&>(source);
+  target_list.insert(target_list.end(), source_list.begin(), source_list.end());
+}
+
 void ReserveResultDataStructure::PrintDataStructure(const std::any& context) const {
   (void)context;
   Logger::Log(L"ReserveResultDataStructure contents:\n");

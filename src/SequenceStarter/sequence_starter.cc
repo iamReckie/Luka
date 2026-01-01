@@ -20,7 +20,6 @@
 #include <string>
 
 #include "CommandProcessor/command_processor.h"
-#include "Environments/environment_parser.h"
 #include "Logger/logger.h"
 #include "Utility/string_utils.h"
 int StartSequence(int argc, char* argv[]) {
@@ -41,7 +40,6 @@ int StartSequence(int argc, char* argv[]) {
     return -1;
   }
   // Run all the scenario items (environment or command)
-  Environments::EnvironmentParser::Parse(config);
   for (const auto& item : config) {
     if (item.first.as<std::string>() == "scenario") {
       for (const auto& cmd : item.second) {
