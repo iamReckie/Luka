@@ -24,9 +24,9 @@
 #include "DataProcessor/code_data_structure.h"
 #include "DataProcessor/data_processor.h"
 #include "DataProcessor/expense_data_structure.h"
+#include "DataProcessor/insurance_output_data_structure.h"
 #include "DataProcessor/insurance_result_data_structure.h"
 #include "DataProcessor/qx_data_structure.h"
-#include "DataProcessor/reserve_result_data_structure.h"
 #include "DataProcessor/sratio_data_structure.h"
 #include "DataProcessor/tbl_data_structure.h"
 #include "DataProcessor/termination_data_structure.h"
@@ -240,8 +240,8 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
       ds_instance = std::make_shared<TableDataStructure>(self);
     } else if (type == L"InsuranceResult") {
       ds_instance = std::make_shared<InsuranceResultDataStructure>(self);
-    } else if (type == L"ReserveResult") {
-      ds_instance = std::make_shared<ReserveResultDataStructure>(self);
+    } else if (type == L"InsuranceOutput") {
+      ds_instance = std::make_shared<InsuranceOutputDataStructure>(self);
     }
 
     // Update cache in the new registry

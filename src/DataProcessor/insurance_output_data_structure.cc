@@ -11,26 +11,26 @@
 //
 // Developed by: Luka
 // ============================================================================
-#include "DataProcessor/reserve_result_data_structure.h"
+#include "DataProcessor/insurance_output_data_structure.h"
 
 #include <any>
 #include <string>
 #include <vector>
 
 #include "DataProcessor/data_helper.h"
+#include "DataProcessor/insurance_result_data_structure.h"
 #include "DataProcessor/tbl_data_structure.h"
 #include "Logger/logger.h"
 #include "Utility/string_utils.h"
-void ReserveResultDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
-  auto& reserve_result_context = std::any_cast<ReserveResultContext&>(context);
-  if (!reserve_result_context.result) {
-    reserve_result_context.result = std::make_shared<ReserveResult>();
-    reserve_result_context.result->tVn_Input.resize(2);
+void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+  auto& insurance_output_context = std::any_cast<InsuranceOutputContext&>(context);
+  if (!insurance_output_context.output) {
+    insurance_output_context.output = std::make_shared<InsuranceOutput>();
+    insurance_output_context.output->tVn_Input.resize(2);
   }
-  auto& result = reserve_result_context.result;
-
+  auto& output = insurance_output_context.output;
   try {
-    ReserveResultIndex reserve_result_index = std::any_cast<ReserveResultIndex>(args[0]);
+    InsuranceOutputIndex insurance_output_index = std::any_cast<InsuranceOutputIndex>(args[0]);
     std::shared_ptr<DataHelper> data_helper = GetDataHelper();
 
     // 1. Get Table Data Context
@@ -83,39 +83,39 @@ void ReserveResultDataStructure::ConstructDataStructure(std::any& context, const
     int idx_Alpha_1 = -1, idx_Alpha_2 = -1;
     int idx_STD_NP_1 = -1, idx_STD_NP_2 = -1;
 
-    if (reserve_result_index.tVn_Input.size() > 0 && reserve_result_index.tVn_Input[0].size() > 0) {
-      idx_tVn_1_loop = parseIndex(reserve_result_index.tVn_Input[0][0]);
+    if (insurance_output_index.tVn_Input.size() > 0 && insurance_output_index.tVn_Input[0].size() > 0) {
+      idx_tVn_1_loop = parseIndex(insurance_output_index.tVn_Input[0][0]);
     }
-    if (reserve_result_index.tVn_Input.size() > 0 && reserve_result_index.tVn_Input[0].size() > 1) {
-      idx_tVn_1_end = parseIndex(reserve_result_index.tVn_Input[0][1]);
-    }
-
-    if (reserve_result_index.tVn_Input.size() > 1 && reserve_result_index.tVn_Input[1].size() > 0) {
-      idx_tVn_2_loop = parseIndex(reserve_result_index.tVn_Input[1][0]);
-    }
-    if (reserve_result_index.tVn_Input.size() > 1 && reserve_result_index.tVn_Input[1].size() > 1) {
-      idx_tVn_2_end = parseIndex(reserve_result_index.tVn_Input[1][1]);
+    if (insurance_output_index.tVn_Input.size() > 0 && insurance_output_index.tVn_Input[0].size() > 1) {
+      idx_tVn_1_end = parseIndex(insurance_output_index.tVn_Input[0][1]);
     }
 
-    if (reserve_result_index.NP_beta_Input.size() > 0 && reserve_result_index.NP_beta_Input[0].size() > 0) {
-      idx_NP_1 = parseIndex(reserve_result_index.NP_beta_Input[0][0]);
+    if (insurance_output_index.tVn_Input.size() > 1 && insurance_output_index.tVn_Input[1].size() > 0) {
+      idx_tVn_2_loop = parseIndex(insurance_output_index.tVn_Input[1][0]);
     }
-    if (reserve_result_index.NP_beta_Input.size() > 1 && reserve_result_index.NP_beta_Input[1].size() > 0) {
-      idx_NP_2 = parseIndex(reserve_result_index.NP_beta_Input[1][0]);
-    }
-
-    if (reserve_result_index.Alpha_ALD_Input.size() > 0 && reserve_result_index.Alpha_ALD_Input[0].size() > 0) {
-      idx_Alpha_1 = parseIndex(reserve_result_index.Alpha_ALD_Input[0][0]);
-    }
-    if (reserve_result_index.Alpha_ALD_Input.size() > 1 && reserve_result_index.Alpha_ALD_Input[1].size() > 0) {
-      idx_Alpha_2 = parseIndex(reserve_result_index.Alpha_ALD_Input[1][0]);
+    if (insurance_output_index.tVn_Input.size() > 1 && insurance_output_index.tVn_Input[1].size() > 1) {
+      idx_tVn_2_end = parseIndex(insurance_output_index.tVn_Input[1][1]);
     }
 
-    if (reserve_result_index.STD_NP_Input.size() > 0 && reserve_result_index.STD_NP_Input[0].size() > 0) {
-      idx_STD_NP_1 = parseIndex(reserve_result_index.STD_NP_Input[0][0]);
+    if (insurance_output_index.NP_beta_Input.size() > 0 && insurance_output_index.NP_beta_Input[0].size() > 0) {
+      idx_NP_1 = parseIndex(insurance_output_index.NP_beta_Input[0][0]);
     }
-    if (reserve_result_index.STD_NP_Input.size() > 1 && reserve_result_index.STD_NP_Input[1].size() > 0) {
-      idx_STD_NP_2 = parseIndex(reserve_result_index.STD_NP_Input[1][0]);
+    if (insurance_output_index.NP_beta_Input.size() > 1 && insurance_output_index.NP_beta_Input[1].size() > 0) {
+      idx_NP_2 = parseIndex(insurance_output_index.NP_beta_Input[1][0]);
+    }
+
+    if (insurance_output_index.Alpha_ALD_Input.size() > 0 && insurance_output_index.Alpha_ALD_Input[0].size() > 0) {
+      idx_Alpha_1 = parseIndex(insurance_output_index.Alpha_ALD_Input[0][0]);
+    }
+    if (insurance_output_index.Alpha_ALD_Input.size() > 1 && insurance_output_index.Alpha_ALD_Input[1].size() > 0) {
+      idx_Alpha_2 = parseIndex(insurance_output_index.Alpha_ALD_Input[1][0]);
+    }
+
+    if (insurance_output_index.STD_NP_Input.size() > 0 && insurance_output_index.STD_NP_Input[0].size() > 0) {
+      idx_STD_NP_1 = parseIndex(insurance_output_index.STD_NP_Input[0][0]);
+    }
+    if (insurance_output_index.STD_NP_Input.size() > 1 && insurance_output_index.STD_NP_Input[1].size() > 0) {
+      idx_STD_NP_2 = parseIndex(insurance_output_index.STD_NP_Input[1][0]);
     }
 
     for (const auto& insurance_result : insurance_results) {
@@ -130,31 +130,31 @@ void ReserveResultDataStructure::ConstructDataStructure(std::any& context, const
         const auto& row = varTemp1[kk];
 
         if (idx_tVn_1_loop != -1) {
-          result->tVn_Input[0].push_back(getValue(row, idx_tVn_1_loop));
-          result->tVn_Input[1].push_back(getValue(row, idx_tVn_2_loop));
+          output->tVn_Input[0].push_back(getValue(row, idx_tVn_1_loop));
+          output->tVn_Input[1].push_back(getValue(row, idx_tVn_2_loop));
         }
 
         if (kk == 0) {
           if (idx_Alpha_1 != -1) {
-            result->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_1));
-            result->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_2));
+            output->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_1));
+            output->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_2));
           }
           if (idx_NP_1 != -1) {
-            result->NP_beta_Input.push_back(getValue(row, idx_NP_1));
-            result->NP_beta_Input.push_back(getValue(row, idx_NP_2));
+            output->NP_beta_Input.push_back(getValue(row, idx_NP_1));
+            output->NP_beta_Input.push_back(getValue(row, idx_NP_2));
           }
         }
         if (idx_STD_NP_1 != -1) {
-          result->STD_NP_Input.push_back(getValue(row, idx_STD_NP_1));
-          result->STD_NP_Input.push_back(getValue(row, idx_STD_NP_2));
+          output->STD_NP_Input.push_back(getValue(row, idx_STD_NP_1));
+          output->STD_NP_Input.push_back(getValue(row, idx_STD_NP_2));
         }
         continue;
       }
 
       if (nn > 0 && nn - 1 < static_cast<int>(varTemp1.size())) {
         const auto& last_row = varTemp1[nn - 1];
-        result->tVn_Input[0].push_back(getValue(last_row, idx_tVn_1_end));
-        result->tVn_Input[1].push_back(getValue(last_row, idx_tVn_2_end));
+        output->tVn_Input[0].push_back(getValue(last_row, idx_tVn_1_end));
+        output->tVn_Input[1].push_back(getValue(last_row, idx_tVn_2_end));
       }
     }
 
@@ -164,20 +164,20 @@ void ReserveResultDataStructure::ConstructDataStructure(std::any& context, const
   }
 }
 
-void ReserveResultDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
-  auto& target_ctx = std::any_cast<ReserveResultContext&>(target);
-  const auto& source_ctx = std::any_cast<const ReserveResultContext&>(source);
+void InsuranceOutputDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
+  auto& target_ctx = std::any_cast<InsuranceOutputContext&>(target);
+  const auto& source_ctx = std::any_cast<const InsuranceOutputContext&>(source);
 
-  if (!source_ctx.result) {
+  if (!source_ctx.output) {
     return;
   }
-  if (!target_ctx.result) {
-    target_ctx.result = std::make_shared<ReserveResult>();
-    target_ctx.result->tVn_Input.resize(2);
+  if (!target_ctx.output) {
+    target_ctx.output = std::make_shared<InsuranceOutput>();
+    target_ctx.output->tVn_Input.resize(2);
   }
 
-  auto& t_res = target_ctx.result;
-  const auto& s_res = source_ctx.result;
+  auto& t_res = target_ctx.output;
+  const auto& s_res = source_ctx.output;
 
   if (s_res->tVn_Input.size() >= 2) {
     t_res->tVn_Input[0].insert(t_res->tVn_Input[0].end(), s_res->tVn_Input[0].begin(), s_res->tVn_Input[0].end());
@@ -189,42 +189,42 @@ void ReserveResultDataStructure::MergeDataStructure(std::any& target, const std:
   t_res->STD_NP_Input.insert(t_res->STD_NP_Input.end(), s_res->STD_NP_Input.begin(), s_res->STD_NP_Input.end());
 }
 
-void ReserveResultDataStructure::PrintDataStructure(const std::any& context) const {
-  const auto& reserve_context = std::any_cast<const ReserveResultContext&>(context);
-  if (!reserve_context.result) {
-    Logger::Log(L"ReserveResultDataStructure is empty.\n");
+void InsuranceOutputDataStructure::PrintDataStructure(const std::any& context) const {
+  const auto& insurance_context = std::any_cast<const InsuranceOutputContext&>(context);
+  if (!insurance_context.output) {
+    Logger::Log(L"InsuranceOutputDataStructure is empty.\n");
     return;
   }
-  const auto& result = reserve_context.result;
+  const auto& output = insurance_context.output;
 
-  Logger::Log(L"ReserveResultDataStructure contents:\n");
+  Logger::Log(L"InsuranceOutputDataStructure contents:\n");
 
   Logger::Log(L"  tVn_Input (Row 0): ");
-  for (double val : result->tVn_Input[0]) {
+  for (double val : output->tVn_Input[0]) {
     Logger::Log(L"%.2f ", val);
   }
   Logger::Log(L"\n");
 
   Logger::Log(L"  tVn_Input (Row 1): ");
-  for (double val : result->tVn_Input[1]) {
+  for (double val : output->tVn_Input[1]) {
     Logger::Log(L"%.2f ", val);
   }
   Logger::Log(L"\n");
 
   Logger::Log(L"  Alpha_ALD_Input: ");
-  for (double val : result->Alpha_ALD_Input) {
+  for (double val : output->Alpha_ALD_Input) {
     Logger::Log(L"%.2f ", val);
   }
   Logger::Log(L"\n");
 
   Logger::Log(L"  NP_beta_Input: ");
-  for (double val : result->NP_beta_Input) {
+  for (double val : output->NP_beta_Input) {
     Logger::Log(L"%.2f ", val);
   }
   Logger::Log(L"\n");
 
   Logger::Log(L"  STD_NP_Input: ");
-  for (double val : result->STD_NP_Input) {
+  for (double val : output->STD_NP_Input) {
     Logger::Log(L"%.2f ", val);
   }
   Logger::Log(L"\n");

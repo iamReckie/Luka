@@ -11,40 +11,40 @@
 //
 // Developed by: Luka
 // ============================================================================
-#ifndef SRC_DATAPROCESSOR_RESERVE_RESULT_DATA_STRUCTURE_H_
-#define SRC_DATAPROCESSOR_RESERVE_RESULT_DATA_STRUCTURE_H_
+#ifndef SRC_DATAPROCESSOR_INSURANCE_OUTPUT_DATA_STRUCTURE_H_
+#define SRC_DATAPROCESSOR_INSURANCE_OUTPUT_DATA_STRUCTURE_H_
 #include <any>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "DataProcessor/data_processor.h"
-struct ReserveResultIndex {
+struct InsuranceOutputIndex {
   std::vector<std::vector<std::wstring>> tVn_Input;
   std::vector<std::vector<std::wstring>> Alpha_ALD_Input;
   std::vector<std::vector<std::wstring>> NP_beta_Input;
   std::vector<std::vector<std::wstring>> STD_NP_Input;
 };
-struct ReserveResult {
+struct InsuranceOutput {
   std::vector<std::vector<double>> tVn_Input;
   std::vector<double> Alpha_ALD_Input;
   std::vector<double> NP_beta_Input;
   std::vector<double> STD_NP_Input;
 };
 
-struct ReserveResultContext {
-  std::shared_ptr<ReserveResult> result;
+struct InsuranceOutputContext {
+  std::shared_ptr<InsuranceOutput> output;
 };
 
-class ReserveResultDataStructure : public IDataStructure {
+class InsuranceOutputDataStructure : public IDataStructure {
  public:
-  explicit ReserveResultDataStructure(std::shared_ptr<DataHelper> data_helper)
+  explicit InsuranceOutputDataStructure(std::shared_ptr<DataHelper> data_helper)
       : IDataStructure(data_helper) {}
   void ConstructDataStructure(std::any& context,
                               const std::vector<std::any>& args,
                               std::wstring& key) override;
   void MergeDataStructure(std::any& target, const std::any& source) override;
   void PrintDataStructure(const std::any& context) const override;
-  std::any CreateContext() const override { return ReserveResultContext(); }
+  std::any CreateContext() const override { return InsuranceOutputContext(); }
 };
-#endif  // SRC_DATAPROCESSOR_RESERVE_RESULT_DATA_STRUCTURE_H_
+#endif  // SRC_DATAPROCESSOR_INSURANCE_OUTPUT_DATA_STRUCTURE_H_

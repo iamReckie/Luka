@@ -11,8 +11,8 @@
 //
 // Developed by: Luka
 // ============================================================================
-#ifndef SRC_COMMANDPROCESSOR_CALC_RESERVE_EXPENSE_H_
-#define SRC_COMMANDPROCESSOR_CALC_RESERVE_EXPENSE_H_
+#ifndef SRC_COMMANDPROCESSOR_CALC_INSURANCE_OUTPUT_H_
+#define SRC_COMMANDPROCESSOR_CALC_INSURANCE_OUTPUT_H_
 #include <yaml-cpp/yaml.h>
 
 #include <OpenXLSX.hpp>
@@ -21,11 +21,11 @@
 #include <vector>
 
 #include "CommandProcessor/command_processor.h"
-class CalcReserveExpenseCommand : public BaseCommand {
+class CalcInsuranceOutputCommand : public BaseCommand {
  public:
-  explicit CalcReserveExpenseCommand(std::shared_ptr<DataHelper> helper)
+  explicit CalcInsuranceOutputCommand(std::shared_ptr<DataHelper> helper)
       : BaseCommand(helper) {}
   void Execute(const YAML::Node& command_data) override;
   std::vector<std::wstring> SplitAndConvertToWString(const std::string& input);
 };
-#endif  // SRC_COMMANDPROCESSOR_CALC_RESERVE_EXPENSE_H_
+#endif  // SRC_COMMANDPROCESSOR_CALC_INSURANCE_OUTPUT_H_

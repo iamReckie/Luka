@@ -17,10 +17,10 @@
 #include <string>
 #include <vector>
 
-#include "Utility/excel_utils.h"
-#include "Utility/string_utils.h"
 #include "DataProcessor/insurance_result_data_structure.h"
 #include "Logger/logger.h"
+#include "Utility/excel_utils.h"
+#include "Utility/string_utils.h"
 
 void CalcInsuranceExpenseCommand::Execute(const YAML::Node &command_data) {
   std::wstring file_name = Ctw(command_data["name"].as<std::string>());

@@ -11,17 +11,17 @@
 //
 // Developed by: Luka
 // ============================================================================
-#include "CommandProcessor/calc_reserve_expense.h"
+#include "CommandProcessor/calc_insurance_output.h"
 
 #include <sstream>
 #include <string>
 #include <vector>
 
-#include "DataProcessor/reserve_result_data_structure.h"
+#include "DataProcessor/insurance_output_data_structure.h"
 #include "Logger/logger.h"
 #include "Utility/string_utils.h"
 std::vector<std::wstring>
-CalcReserveExpenseCommand::SplitAndConvertToWString(const std::string &input) {
+CalcInsuranceOutputCommand::SplitAndConvertToWString(const std::string &input) {
   std::vector<std::wstring> result;
   std::string token;
   std::istringstream stream(input);
@@ -33,15 +33,15 @@ CalcReserveExpenseCommand::SplitAndConvertToWString(const std::string &input) {
 
   return result;
 }
-void CalcReserveExpenseCommand::Execute(const YAML::Node &command_data) {
+void CalcInsuranceOutputCommand::Execute(const YAML::Node &command_data) {
   std::wstring file_name = Ctw(command_data["name"].as<std::string>());
 
   auto insurance_result_data_structure =
       data_helper_->GetDataStructure(file_name + L"InsuranceResult");
-  // Create reserve result index data structure
-  // std::unique_ptr<ReserveResultIndex> reserve_result_index =
-  //     std::shared_unique<ReserveResultIndex>();
-  ReserveResultIndex reserve_result_index;
+  // Create insurance output result index data structure
+  // std::unique_ptr<InsuranceOutputResultIndex> insurance_output_result_index =
+  //     std::shared_unique<InsuranceOutputResultIndex>();
+  InsuranceOutputIndex insurance_output_result_index;
   // insert key of table first
   // Start making yaml data structure
   if (command_data["variables"]) {
@@ -53,7 +53,7 @@ void CalcReserveExpenseCommand::Execute(const YAML::Node &command_data) {
             std::string string_value = idx.as<std::string>();
             std::vector<std::wstring> tokens =
                 SplitAndConvertToWString(string_value);
-            reserve_result_index.tVn_Input.push_back(tokens);
+            insurance_output_result_index.tVn_Input.push_back(tokens);
           }
         }
       } else if (name == L"Alpha_ALD_Input") {
@@ -62,7 +62,7 @@ void CalcReserveExpenseCommand::Execute(const YAML::Node &command_data) {
             std::string string_value = idx.as<std::string>();
             std::vector<std::wstring> tokens =
                 SplitAndConvertToWString(string_value);
-            reserve_result_index.Alpha_ALD_Input.push_back(tokens);
+            insurance_output_result_index.Alpha_ALD_Input.push_back(tokens);
           }
         }
       } else if (name == L"NP_beta_Input") {
@@ -71,7 +71,7 @@ void CalcReserveExpenseCommand::Execute(const YAML::Node &command_data) {
             std::string string_value = idx.as<std::string>();
             std::vector<std::wstring> tokens =
                 SplitAndConvertToWString(string_value);
-            reserve_result_index.NP_beta_Input.push_back(tokens);
+            insurance_output_result_index.NP_beta_Input.push_back(tokens);
           }
         }
       } else if (name == L"STD_NP_Input") {
@@ -80,7 +80,7 @@ void CalcReserveExpenseCommand::Execute(const YAML::Node &command_data) {
             std::string string_value = idx.as<std::string>();
             std::vector<std::wstring> tokens =
                 SplitAndConvertToWString(string_value);
-            reserve_result_index.STD_NP_Input.push_back(tokens);
+            insurance_output_result_index.STD_NP_Input.push_back(tokens);
           }
         }
       } else {
@@ -88,7 +88,7 @@ void CalcReserveExpenseCommand::Execute(const YAML::Node &command_data) {
       }
     }
   }
-  std::vector<std::any> args = {reserve_result_index};
-  data_helper_->ExecuteData(file_name + L"ReserveResult", file_name, L"ReserveResult", args);
-  data_helper_->PrintData(file_name + L"ReserveResult");
+  std::vector<std::any> args = {insurance_output_result_index};
+  data_helper_->ExecuteData(+L"InsuranceOutput", file_name, L"InsuranceOutput", args);
+  data_helper_->PrintData(+L"InsuranceOutput");
 }

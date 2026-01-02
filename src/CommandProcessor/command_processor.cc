@@ -16,7 +16,7 @@
 #include <memory>
 
 #include "CommandProcessor/calc_insurance_expense.h"
-#include "CommandProcessor/calc_reserve_expense.h"
+#include "CommandProcessor/calc_insurance_output.h"
 #include "CommandProcessor/environments_command.h"
 #include "CommandProcessor/read_excel.h"
 #include "CommandProcessor/read_tbl.h"
@@ -31,6 +31,6 @@ void CommandHelper::RegisterAllCommands() {
       std::make_shared<ReadTblCommand>(data_helper_);
   command_instances_[L"calc_insurance_expense"] =
       std::make_shared<CalcInsuranceExpenseCommand>(data_helper_);
-  command_instances_[L"calc_reserve_expense"] =
-      std::make_shared<CalcReserveExpenseCommand>(data_helper_);
+  command_instances_[L"calc_insurance_output"] =
+      std::make_shared<CalcInsuranceOutputCommand>(data_helper_);
 }
