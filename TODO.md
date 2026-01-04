@@ -1,5 +1,5 @@
 # 현재 하는것
-- Excel file의 vba코드에 보면 varTemp1과 varTemp2별로 실제로 construct하는 자료구조가 다름
-- **calc_reserve_expense.cc** 여기서 context로 현재 파일 이름과 현재 해야하는 작업이 뭔지(varTemp1인지 varTemp2인지)를 정해서 보내준 뒤 flag를 보고 분기해야됨
+- Alp가져오는 부분 해야됨. 이것은 P table에서 가져오는데 현재 insurance_output_Data_structure.cc의 key로 table이름까지는 가져옴
+- 일단 해보고 만약 expense_output_data_structure 필요 없으면 지워라
 # 문제
 - 없음
