@@ -16,14 +16,15 @@
 #include <any>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "DataProcessor/data_processor.h"
 struct InsuranceOutputIndex {
-  std::vector<std::vector<std::wstring>> tVn_Input;
-  std::vector<std::vector<std::wstring>> Alpha_ALD_Input;
-  std::vector<std::vector<std::wstring>> NP_beta_Input;
-  std::vector<std::vector<std::wstring>> STD_NP_Input;
+  std::pair<std::wstring, std::vector<std::vector<std::wstring>>> tVn_Input;
+  std::pair<std::wstring, std::vector<std::vector<std::wstring>>> Alpha_ALD_Input;
+  std::pair<std::wstring, std::vector<std::vector<std::wstring>>> NP_beta_Input;
+  std::pair<std::wstring, std::vector<std::vector<std::wstring>>> STD_NP_Input;
 };
 struct InsuranceOutput {
   std::vector<std::vector<double>> tVn_Input;

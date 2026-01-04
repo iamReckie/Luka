@@ -33,7 +33,8 @@ class CalcInsuranceOutputCommand : public BaseCommand {
 
  private:
   void ProcessVariables(const YAML::Node &variables_node,
-                        InsuranceOutputIndex &insurance_output_result_index);
+                        InsuranceOutputIndex &insurance_output_result_index,
+                        const std::wstring &file_name);
   void ProcessFile(const std::wstring &file_name,
                    const YAML::Node &variables_node,
                    InsuranceOutputIndex &insurance_output_result_index);

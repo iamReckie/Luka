@@ -14,7 +14,6 @@
 #include "CommandProcessor/read_excel.h"
 
 #include <OpenXLSX.hpp>
-#include <thread>
 
 #include "Environments/global_environment.h"
 #include "Logger/logger.h"
@@ -225,7 +224,9 @@ void ReadExcelCommand::Execute(const YAML::Node& command_data) {
         ExecuteCuda(wks, ranges, sheet_name, sheet_type);
         break;
     }
-
     data_helper_->PrintData(sheet_name);
   }
+  // Do expense output construction after reading excel is finished.
+  std::wstring key = L"";
+  data_helper_->ExecuteData(L"ExpenseOutput", key, L"ExpenseOutput", {}, nullptr);
 }

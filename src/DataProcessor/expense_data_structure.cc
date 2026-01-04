@@ -19,8 +19,7 @@
 #include <vector>
 
 #include "Logger/logger.h"
-void ExpenseDataStructure::ConstructDataStructure(
-    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+void ExpenseDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   auto& expense_table = std::any_cast<ExpenseTableMap&>(context);
   int key_to_int{0};
   std::wstring input = std::any_cast<std::wstring>(args[0]);

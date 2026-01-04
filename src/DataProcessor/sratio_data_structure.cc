@@ -19,8 +19,7 @@
 #include <vector>
 
 #include "Logger/logger.h"
-void SRatioDataStructure::ConstructDataStructure(
-    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+void SRatioDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   auto& sratio_table = std::any_cast<SRatioTableMap&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);

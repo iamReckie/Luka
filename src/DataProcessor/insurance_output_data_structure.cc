@@ -18,19 +18,15 @@
 #include <vector>
 
 #include "DataProcessor/data_helper.h"
+#include "DataProcessor/expense_output_data_structure.h"
 #include "DataProcessor/insurance_result_data_structure.h"
 #include "DataProcessor/tbl_data_structure.h"
 #include "Logger/logger.h"
 #include "Utility/string_utils.h"
 void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   auto& insurance_output_context = std::any_cast<InsuranceOutputContext&>(context);
-  // if (!insurance_output_context.output) {
-  //   insurance_output_context.output = std::make_shared<InsuranceOutput>();
-  //   insurance_output_context.output->tVn_Input.resize(2);
-  // }
   std::shared_ptr<InsuranceOutput> output_ptr = std::make_shared<InsuranceOutput>();
   output_ptr->tVn_Input.resize(2);
-  // auto& output = insurance_output_context.output;
   try {
     InsuranceOutputIndex insurance_output_index = std::any_cast<InsuranceOutputIndex>(args[0]);
     std::shared_ptr<DataHelper> data_helper = GetDataHelper();
@@ -51,16 +47,25 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
     }
     const auto& insurance_results = std::any_cast<const InsuranceResultDataStructure::InsuranceResultList&>(*insurance_context_ptr);
 
+    // Get Expense Output Data Context
+    std::shared_ptr<ExpenseOutput> expense_output = nullptr;
+    auto* expense_output_context_ptr = data_helper->GetDataContext(L"ExpenseOutput");
+    if (expense_output_context_ptr) {
+      const auto& expense_output_ctx = std::any_cast<const ExpenseOutputContext&>(*expense_output_context_ptr);
+      expense_output = expense_output_ctx.output;
+    } else {
+      Logger::Log(L"Warning: Failed to get ExpenseOutput context\n");
+    }
+
     // 3. Get the specific table data for the key
     auto table_it = table_data_map.find(key);
     if (table_it == table_data_map.end()) {
       Logger::Log(L"Error: Table data not found for key: %ls\n", key.c_str());
       return;
     }
-    const auto& varTemp1 = table_it->second;  // vector<vector<int>>
 
-    // Helper to parse index from string safely
-    auto parseIndex = [](const std::wstring& s) -> int {
+    // Helper lambda to parse index from string safely
+    auto parse_index = [](const std::wstring& s) -> int {
       try {
         return std::stoi(s);
       } catch (...) {
@@ -68,55 +73,69 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
       }
     };
 
-    // Helper to get value from row safely
-    auto getValue = [&](const std::vector<int>& row, int idx) -> double {
+    // Helper lambda to get value from row safely
+    auto get_value = [&](const std::vector<int>& row, int idx) -> double {
       if (idx >= 0 && idx < static_cast<int>(row.size())) {
         return static_cast<double>(row[idx]);
       }
       return 0.0;
     };
 
-    // Extract indices from ReserveResultIndex
-    // Assuming structure: [row][0] = loop index, [row][1] = end index (if applicable)
+    // Helper lambda to get table row from a given table name and row index
+    auto get_table_row = [&](const std::wstring& table_name, int row_idx) -> const std::vector<int>* {
+      auto* ctx_ptr = data_helper->GetDataContext(table_name);
+      if (!ctx_ptr) {
+        Logger::Log(L"Error: Failed to get TableData context for %ls\n", table_name.c_str());
+        return nullptr;
+      }
+      const auto& map = std::any_cast<const TableDataStructure::TableDataMap&>(*ctx_ptr);
+      auto it = map.find(table_name);
+      if (it == map.end()) {
+        Logger::Log(L"Error: Table data not found for key: %ls\n", table_name.c_str());
+        return nullptr;
+      }
+      if (row_idx < 0 || row_idx >= static_cast<int>(it->second.size())) {
+        return nullptr;
+      }
+      return &(it->second[row_idx]);
+    };
+
+    // Extract indices from InsuranceOutputIndex
     int idx_tVn_1_loop = -1, idx_tVn_1_end = -1;
     int idx_tVn_2_loop = -1, idx_tVn_2_end = -1;
     int idx_NP_1 = -1, idx_NP_2 = -1;
     int idx_Alpha_1 = -1, idx_Alpha_2 = -1;
     int idx_STD_NP_1 = -1, idx_STD_NP_2 = -1;
 
-    if (insurance_output_index.tVn_Input.size() > 0 && insurance_output_index.tVn_Input[0].size() > 0) {
-      idx_tVn_1_loop = parseIndex(insurance_output_index.tVn_Input[0][0]);
-    }
-    if (insurance_output_index.tVn_Input.size() > 0 && insurance_output_index.tVn_Input[0].size() > 1) {
-      idx_tVn_1_end = parseIndex(insurance_output_index.tVn_Input[0][1]);
+    if (insurance_output_index.tVn_Input.second.size() > 0 && !insurance_output_index.tVn_Input.second[0].empty()) {
+      idx_tVn_1_loop = parse_index(insurance_output_index.tVn_Input.second[0].back());
+      idx_tVn_1_end = idx_tVn_1_loop + 1;
     }
 
-    if (insurance_output_index.tVn_Input.size() > 1 && insurance_output_index.tVn_Input[1].size() > 0) {
-      idx_tVn_2_loop = parseIndex(insurance_output_index.tVn_Input[1][0]);
-    }
-    if (insurance_output_index.tVn_Input.size() > 1 && insurance_output_index.tVn_Input[1].size() > 1) {
-      idx_tVn_2_end = parseIndex(insurance_output_index.tVn_Input[1][1]);
+    if (insurance_output_index.tVn_Input.second.size() > 1 && !insurance_output_index.tVn_Input.second[1].empty()) {
+      idx_tVn_2_loop = parse_index(insurance_output_index.tVn_Input.second[1].back());
+      idx_tVn_2_end = idx_tVn_2_loop + 1;
     }
 
-    if (insurance_output_index.NP_beta_Input.size() > 0 && insurance_output_index.NP_beta_Input[0].size() > 0) {
-      idx_NP_1 = parseIndex(insurance_output_index.NP_beta_Input[0][0]);
+    if (insurance_output_index.NP_beta_Input.second.size() > 0 && !insurance_output_index.NP_beta_Input.second[0].empty()) {
+      idx_NP_1 = parse_index(insurance_output_index.NP_beta_Input.second[0].back());
     }
-    if (insurance_output_index.NP_beta_Input.size() > 1 && insurance_output_index.NP_beta_Input[1].size() > 0) {
-      idx_NP_2 = parseIndex(insurance_output_index.NP_beta_Input[1][0]);
-    }
-
-    if (insurance_output_index.Alpha_ALD_Input.size() > 0 && insurance_output_index.Alpha_ALD_Input[0].size() > 0) {
-      idx_Alpha_1 = parseIndex(insurance_output_index.Alpha_ALD_Input[0][0]);
-    }
-    if (insurance_output_index.Alpha_ALD_Input.size() > 1 && insurance_output_index.Alpha_ALD_Input[1].size() > 0) {
-      idx_Alpha_2 = parseIndex(insurance_output_index.Alpha_ALD_Input[1][0]);
+    if (insurance_output_index.NP_beta_Input.second.size() > 1 && !insurance_output_index.NP_beta_Input.second[1].empty()) {
+      idx_NP_2 = parse_index(insurance_output_index.NP_beta_Input.second[1].back());
     }
 
-    if (insurance_output_index.STD_NP_Input.size() > 0 && insurance_output_index.STD_NP_Input[0].size() > 0) {
-      idx_STD_NP_1 = parseIndex(insurance_output_index.STD_NP_Input[0][0]);
+    if (insurance_output_index.Alpha_ALD_Input.second.size() > 0 && !insurance_output_index.Alpha_ALD_Input.second[0].empty()) {
+      idx_Alpha_1 = parse_index(insurance_output_index.Alpha_ALD_Input.second[0].back());
     }
-    if (insurance_output_index.STD_NP_Input.size() > 1 && insurance_output_index.STD_NP_Input[1].size() > 0) {
-      idx_STD_NP_2 = parseIndex(insurance_output_index.STD_NP_Input[1][0]);
+    if (insurance_output_index.Alpha_ALD_Input.second.size() > 1 && !insurance_output_index.Alpha_ALD_Input.second[1].empty()) {
+      idx_Alpha_2 = parse_index(insurance_output_index.Alpha_ALD_Input.second[1].back());
+    }
+
+    if (insurance_output_index.STD_NP_Input.second.size() > 0 && !insurance_output_index.STD_NP_Input.second[0].empty()) {
+      idx_STD_NP_1 = parse_index(insurance_output_index.STD_NP_Input.second[0].back());
+    }
+    if (insurance_output_index.STD_NP_Input.second.size() > 1 && !insurance_output_index.STD_NP_Input.second[1].empty()) {
+      idx_STD_NP_2 = parse_index(insurance_output_index.STD_NP_Input.second[1].back());
     }
 
     for (const auto& insurance_result : insurance_results) {
@@ -124,75 +143,58 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
 
       // Loop kk = 0 to nn - 1
       for (int kk = 0; kk < nn; ++kk) {
-        if (kk >= static_cast<int>(varTemp1.size())) {
-          break;
+        // Get row from tVn_Input table
+        const auto* row = get_table_row(insurance_output_index.tVn_Input.first, kk);
+        if (!row) {
+          continue;
         }
 
-        const auto& row = varTemp1[kk];
-
         if (idx_tVn_1_loop != -1) {
-          output_ptr->tVn_Input[0].push_back(getValue(row, idx_tVn_1_loop));
-          output_ptr->tVn_Input[1].push_back(getValue(row, idx_tVn_2_loop));
+          output_ptr->tVn_Input[0].push_back(get_value(*row, idx_tVn_1_loop));
+          output_ptr->tVn_Input[1].push_back(get_value(*row, idx_tVn_2_loop));
         }
 
         if (kk == 0) {
           if (idx_Alpha_1 != -1) {
-            output_ptr->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_1));
-            output_ptr->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_2));
+            output_ptr->Alpha_ALD_Input.push_back(get_value(*row, idx_Alpha_1));
+            output_ptr->Alpha_ALD_Input.push_back(get_value(*row, idx_Alpha_2));
           }
           if (idx_NP_1 != -1) {
-            output_ptr->NP_beta_Input.push_back(getValue(row, idx_NP_1));
-            output_ptr->NP_beta_Input.push_back(getValue(row, idx_NP_2));
+            output_ptr->NP_beta_Input.push_back(get_value(*row, idx_NP_1));
+            output_ptr->NP_beta_Input.push_back(get_value(*row, idx_NP_2));
           }
         }
-        if (idx_STD_NP_1 != -1) {
-          output_ptr->STD_NP_Input.push_back(getValue(row, idx_STD_NP_1));
-          output_ptr->STD_NP_Input.push_back(getValue(row, idx_STD_NP_2));
-        }
-        continue;
-      }
 
-      if (nn > 0 && nn - 1 < static_cast<int>(varTemp1.size())) {
-        const auto& last_row = varTemp1[nn - 1];
-        output_ptr->tVn_Input[0].push_back(getValue(last_row, idx_tVn_1_end));
-        output_ptr->tVn_Input[1].push_back(getValue(last_row, idx_tVn_2_end));
+        // Get row from STD_NP_Input table
+        const auto* std_row = get_table_row(insurance_output_index.STD_NP_Input.first, kk);
+        if (std_row && idx_STD_NP_1 != -1) {
+          output_ptr->STD_NP_Input.push_back(get_value(*std_row, idx_STD_NP_1));
+          output_ptr->STD_NP_Input.push_back(get_value(*std_row, idx_STD_NP_2));
+        }
+
+        if (kk == nn - 1 && idx_tVn_1_end != -1) {
+          output_ptr->tVn_Input[0].push_back(get_value(*row, idx_tVn_1_end));
+          output_ptr->tVn_Input[1].push_back(get_value(*row, idx_tVn_2_end));
+        }
       }
     }
 
     insurance_output_context.output.push_back(output_ptr);
-    Logger::Log(L"Constructing ReserveResultDataStructure with key: %ls\n", key.c_str());
+    Logger::Log(L"Constructing InsuranceOutputDataStructure with key: %ls\n", key.c_str());
   } catch (const std::exception& e) {
-    Logger::Log(L"Error in ReserveResultDataStructure::ConstructDataStructure: %ls\n", Ctw(e.what()).c_str());
+    Logger::Log(L"Error in InsuranceOutputDataStructure::ConstructDataStructure: %ls\n", Ctw(e.what()).c_str());
   }
 }
 
 void InsuranceOutputDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
-  (void)target;
-  (void)source;
-  /*
   auto& target_ctx = std::any_cast<InsuranceOutputContext&>(target);
   const auto& source_ctx = std::any_cast<const InsuranceOutputContext&>(source);
 
-  if (!source_ctx.output) {
+  if (source_ctx.output.empty()) {
     return;
   }
-  if (!target_ctx.output) {
-    target_ctx.output = std::make_shared<InsuranceOutput>();
-    target_ctx.output->tVn_Input.resize(2);
-  }
 
-  auto& t_res = target_ctx.output;
-  const auto& s_res = source_ctx.output;
-
-  if (s_res->tVn_Input.size() >= 2) {
-    t_res->tVn_Input[0].insert(t_res->tVn_Input[0].end(), s_res->tVn_Input[0].begin(), s_res->tVn_Input[0].end());
-    t_res->tVn_Input[1].insert(t_res->tVn_Input[1].end(), s_res->tVn_Input[1].begin(), s_res->tVn_Input[1].end());
-  }
-
-  t_res->Alpha_ALD_Input.insert(t_res->Alpha_ALD_Input.end(), s_res->Alpha_ALD_Input.begin(), s_res->Alpha_ALD_Input.end());
-  t_res->NP_beta_Input.insert(t_res->NP_beta_Input.end(), s_res->NP_beta_Input.begin(), s_res->NP_beta_Input.end());
-  t_res->STD_NP_Input.insert(t_res->STD_NP_Input.end(), s_res->STD_NP_Input.begin(), s_res->STD_NP_Input.end());
-  */
+  target_ctx.output.insert(target_ctx.output.end(), source_ctx.output.begin(), source_ctx.output.end());
 }
 
 void InsuranceOutputDataStructure::PrintDataStructure(const std::any& context) const {

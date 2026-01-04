@@ -29,8 +29,7 @@ struct ExpenseTable {
 };
 class ExpenseDataStructure : public IDataStructure {
  public:
-  using ExpenseTableMap =
-      std::unordered_map<int, std::vector<std::shared_ptr<ExpenseTable>>>;
+  using ExpenseTableMap = std::unordered_map<int, std::vector<std::shared_ptr<ExpenseTable>>>;
 
   explicit ExpenseDataStructure(std::shared_ptr<DataHelper> data_helper)
       : IDataStructure(data_helper) {}

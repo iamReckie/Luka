@@ -24,6 +24,7 @@
 #include "DataProcessor/code_data_structure.h"
 #include "DataProcessor/data_processor.h"
 #include "DataProcessor/expense_data_structure.h"
+#include "DataProcessor/expense_output_data_structure.h"
 #include "DataProcessor/insurance_output_data_structure.h"
 #include "DataProcessor/insurance_result_data_structure.h"
 #include "DataProcessor/qx_data_structure.h"
@@ -194,18 +195,6 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
   }
 
   std::any *GetDataContext(const std::wstring &name) {
-    // Note: Returning a raw pointer to an element inside a shared_ptr managed map is risky
-    // if the caller holds it longer than the DataHelper exists, but standard shared_ptr rules apply.
-    // The registry snapshot will stay alive as long as 'current_registry' is held,
-    // but here we return a raw pointer. The caller must ensure thread safety if they mutate it.
-    // However, since we are emulating the previous behavior, this is "safe" as long as
-    // the map doesn't reallocate (which it won't, because it's immutable/replaced).
-    // But we need to be careful: the 'registry_' might change, but the old 'Registry' object
-    // stays alive if someone holds a shared_ptr to it.
-    // Here we don't return the shared_ptr, so it's potentially unsafe if the registry is destroyed.
-    // BUT: The previous code also returned a raw pointer from a map.
-    // To be truly safe in this lock-free model, we should probably return shared_ptr<any> or similar,
-    // but to keep API compatible:
     auto current_registry = std::atomic_load(&registry_);
     auto it = current_registry->contexts.find(name);
     if (it != current_registry->contexts.end()) {
@@ -242,6 +231,10 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
       ds_instance = std::make_shared<InsuranceResultDataStructure>(self);
     } else if (type == L"InsuranceOutput") {
       ds_instance = std::make_shared<InsuranceOutputDataStructure>(self);
+    } else if (type == L"ExpenseOutput") {
+      ds_instance = std::make_shared<ExpenseOutputDataStructure>(self);
+    } else {
+      Logger::Log(L"Warning: Unknown data structure type requested: %ls\n", type.c_str());
     }
 
     // Update cache in the new registry
