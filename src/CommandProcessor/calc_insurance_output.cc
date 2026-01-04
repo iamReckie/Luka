@@ -33,62 +33,93 @@ CalcInsuranceOutputCommand::SplitAndConvertToWString(const std::string &input) {
 
   return result;
 }
-void CalcInsuranceOutputCommand::Execute(const YAML::Node &command_data) {
-  std::wstring file_name = Ctw(command_data["name"].as<std::string>());
 
-  auto insurance_result_data_structure =
-      data_helper_->GetDataStructure(file_name + L"InsuranceResult");
-  // Create insurance output result index data structure
-  // std::unique_ptr<InsuranceOutputResultIndex> insurance_output_result_index =
-  //     std::shared_unique<InsuranceOutputResultIndex>();
-  InsuranceOutputIndex insurance_output_result_index;
-  // insert key of table first
-  // Start making yaml data structure
-  if (command_data["variables"]) {
-    for (const auto &var : command_data["variables"]) {
-      std::wstring name = Ctw(var["name"].as<std::string>());
-      if (name == L"tVn_Input") {
-        if (var["index"].IsSequence()) {
-          for (const auto &idx : var["index"]) {
-            std::string string_value = idx.as<std::string>();
-            std::vector<std::wstring> tokens =
-                SplitAndConvertToWString(string_value);
-            insurance_output_result_index.tVn_Input.push_back(tokens);
-          }
+void CalcInsuranceOutputCommand::ProcessVariables(
+    const YAML::Node &variables_node,
+    InsuranceOutputIndex &insurance_output_result_index) {
+  for (const auto &var : variables_node) {
+    std::wstring name = Ctw(var["name"].as<std::string>());
+    if (name == L"tVn_Input") {
+      if (var["index"].IsSequence()) {
+        for (const auto &idx : var["index"]) {
+          std::string string_value = idx.as<std::string>();
+          std::vector<std::wstring> tokens =
+              SplitAndConvertToWString(string_value);
+          insurance_output_result_index.tVn_Input.push_back(tokens);
         }
-      } else if (name == L"Alpha_ALD_Input") {
-        if (var["index"].IsSequence()) {
-          for (const auto &idx : var["index"]) {
-            std::string string_value = idx.as<std::string>();
-            std::vector<std::wstring> tokens =
-                SplitAndConvertToWString(string_value);
-            insurance_output_result_index.Alpha_ALD_Input.push_back(tokens);
-          }
-        }
-      } else if (name == L"NP_beta_Input") {
-        if (var["index"].IsSequence()) {
-          for (const auto &idx : var["index"]) {
-            std::string string_value = idx.as<std::string>();
-            std::vector<std::wstring> tokens =
-                SplitAndConvertToWString(string_value);
-            insurance_output_result_index.NP_beta_Input.push_back(tokens);
-          }
-        }
-      } else if (name == L"STD_NP_Input") {
-        if (var["index"].IsSequence()) {
-          for (const auto &idx : var["index"]) {
-            std::string string_value = idx.as<std::string>();
-            std::vector<std::wstring> tokens =
-                SplitAndConvertToWString(string_value);
-            insurance_output_result_index.STD_NP_Input.push_back(tokens);
-          }
-        }
-      } else {
-        Logger::Log(L"Unknown variable name: %s\n", name.c_str());
       }
+    } else if (name == L"Alpha_ALD_Input") {
+      if (var["index"].IsSequence()) {
+        for (const auto &idx : var["index"]) {
+          std::string string_value = idx.as<std::string>();
+          std::vector<std::wstring> tokens =
+              SplitAndConvertToWString(string_value);
+          insurance_output_result_index.Alpha_ALD_Input.push_back(tokens);
+        }
+      }
+    } else if (name == L"NP_beta_Input") {
+      if (var["index"].IsSequence()) {
+        for (const auto &idx : var["index"]) {
+          std::string string_value = idx.as<std::string>();
+          std::vector<std::wstring> tokens =
+              SplitAndConvertToWString(string_value);
+          insurance_output_result_index.NP_beta_Input.push_back(tokens);
+        }
+      }
+    } else if (name == L"STD_NP_Input") {
+      if (var["index"].IsSequence()) {
+        for (const auto &idx : var["index"]) {
+          std::string string_value = idx.as<std::string>();
+          std::vector<std::wstring> tokens =
+              SplitAndConvertToWString(string_value);
+          insurance_output_result_index.STD_NP_Input.push_back(tokens);
+        }
+      }
+    } else {
+      Logger::Log(L"Unknown variable name: %s\n", name.c_str());
     }
   }
+}
+
+void CalcInsuranceOutputCommand::ProcessFile(
+    const std::wstring &file_name,
+    const YAML::Node &variables_node,
+    InsuranceOutputIndex &insurance_output_result_index) {
+  auto insurance_result_data_structure =
+      data_helper_->GetDataStructure(file_name + L"InsuranceResult");
+
+  if (variables_node) {
+    ProcessVariables(variables_node, insurance_output_result_index);
+  }
+}
+
+void CalcInsuranceOutputCommand::Execute(const YAML::Node &command_data) {
+  InsuranceOutputIndex insurance_output_result_index;
+  std::wstring primary_file_name;
+
+  // Check if new format with "files" array
+  if (command_data["files"] && command_data["files"].IsSequence()) {
+    Logger::Log(L"Processing multiple files from 'files' array\n");
+    for (const auto &file_node : command_data["files"]) {
+      std::wstring file_name = Ctw(file_node["name"].as<std::string>());
+      Logger::Log(L"Processing file: %ls\n", file_name.c_str());
+      if (primary_file_name.empty()) {
+        primary_file_name = file_name;
+      }
+      ProcessFile(file_name, file_node["variables"], insurance_output_result_index);
+    }
+  } else if (command_data["name"]) {
+    // Legacy format with single "name" and "variables"
+    Logger::Log(L"Processing single file (legacy format)\n");
+    primary_file_name = Ctw(command_data["name"].as<std::string>());
+    ProcessFile(primary_file_name, command_data["variables"], insurance_output_result_index);
+  } else {
+    Logger::Log(L"Error: Invalid command format - no 'files' or 'name' field\n");
+    return;
+  }
+
+  // Execute and print data once after processing all files
   std::vector<std::any> args = {insurance_output_result_index};
-  data_helper_->ExecuteData(+L"InsuranceOutput", file_name, L"InsuranceOutput", args);
+  data_helper_->ExecuteData(+L"InsuranceOutput", primary_file_name, L"InsuranceOutput", args);
   data_helper_->PrintData(+L"InsuranceOutput");
 }

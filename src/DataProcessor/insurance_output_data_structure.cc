@@ -24,11 +24,13 @@
 #include "Utility/string_utils.h"
 void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   auto& insurance_output_context = std::any_cast<InsuranceOutputContext&>(context);
-  if (!insurance_output_context.output) {
-    insurance_output_context.output = std::make_shared<InsuranceOutput>();
-    insurance_output_context.output->tVn_Input.resize(2);
-  }
-  auto& output = insurance_output_context.output;
+  // if (!insurance_output_context.output) {
+  //   insurance_output_context.output = std::make_shared<InsuranceOutput>();
+  //   insurance_output_context.output->tVn_Input.resize(2);
+  // }
+  std::shared_ptr<InsuranceOutput> output_ptr = std::make_shared<InsuranceOutput>();
+  output_ptr->tVn_Input.resize(2);
+  // auto& output = insurance_output_context.output;
   try {
     InsuranceOutputIndex insurance_output_index = std::any_cast<InsuranceOutputIndex>(args[0]);
     std::shared_ptr<DataHelper> data_helper = GetDataHelper();
@@ -42,8 +44,7 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
     const auto& table_data_map = std::any_cast<const TableDataStructure::TableDataMap&>(*table_context_ptr);
 
     // 2. Get Insurance Result Data Context
-    auto* insurance_context_ptr =
-        data_helper->GetDataContext(L"InsuranceResult");
+    auto* insurance_context_ptr = data_helper->GetDataContext(L"InsuranceResult");
     if (!insurance_context_ptr) {
       Logger::Log(L"Error: Failed to get InsuranceResult context\n");
       return;
@@ -130,34 +131,35 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
         const auto& row = varTemp1[kk];
 
         if (idx_tVn_1_loop != -1) {
-          output->tVn_Input[0].push_back(getValue(row, idx_tVn_1_loop));
-          output->tVn_Input[1].push_back(getValue(row, idx_tVn_2_loop));
+          output_ptr->tVn_Input[0].push_back(getValue(row, idx_tVn_1_loop));
+          output_ptr->tVn_Input[1].push_back(getValue(row, idx_tVn_2_loop));
         }
 
         if (kk == 0) {
           if (idx_Alpha_1 != -1) {
-            output->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_1));
-            output->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_2));
+            output_ptr->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_1));
+            output_ptr->Alpha_ALD_Input.push_back(getValue(row, idx_Alpha_2));
           }
           if (idx_NP_1 != -1) {
-            output->NP_beta_Input.push_back(getValue(row, idx_NP_1));
-            output->NP_beta_Input.push_back(getValue(row, idx_NP_2));
+            output_ptr->NP_beta_Input.push_back(getValue(row, idx_NP_1));
+            output_ptr->NP_beta_Input.push_back(getValue(row, idx_NP_2));
           }
         }
         if (idx_STD_NP_1 != -1) {
-          output->STD_NP_Input.push_back(getValue(row, idx_STD_NP_1));
-          output->STD_NP_Input.push_back(getValue(row, idx_STD_NP_2));
+          output_ptr->STD_NP_Input.push_back(getValue(row, idx_STD_NP_1));
+          output_ptr->STD_NP_Input.push_back(getValue(row, idx_STD_NP_2));
         }
         continue;
       }
 
       if (nn > 0 && nn - 1 < static_cast<int>(varTemp1.size())) {
         const auto& last_row = varTemp1[nn - 1];
-        output->tVn_Input[0].push_back(getValue(last_row, idx_tVn_1_end));
-        output->tVn_Input[1].push_back(getValue(last_row, idx_tVn_2_end));
+        output_ptr->tVn_Input[0].push_back(getValue(last_row, idx_tVn_1_end));
+        output_ptr->tVn_Input[1].push_back(getValue(last_row, idx_tVn_2_end));
       }
     }
 
+    insurance_output_context.output.push_back(output_ptr);
     Logger::Log(L"Constructing ReserveResultDataStructure with key: %ls\n", key.c_str());
   } catch (const std::exception& e) {
     Logger::Log(L"Error in ReserveResultDataStructure::ConstructDataStructure: %ls\n", Ctw(e.what()).c_str());
@@ -165,6 +167,9 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
 }
 
 void InsuranceOutputDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
+  (void)target;
+  (void)source;
+  /*
   auto& target_ctx = std::any_cast<InsuranceOutputContext&>(target);
   const auto& source_ctx = std::any_cast<const InsuranceOutputContext&>(source);
 
@@ -187,45 +192,48 @@ void InsuranceOutputDataStructure::MergeDataStructure(std::any& target, const st
   t_res->Alpha_ALD_Input.insert(t_res->Alpha_ALD_Input.end(), s_res->Alpha_ALD_Input.begin(), s_res->Alpha_ALD_Input.end());
   t_res->NP_beta_Input.insert(t_res->NP_beta_Input.end(), s_res->NP_beta_Input.begin(), s_res->NP_beta_Input.end());
   t_res->STD_NP_Input.insert(t_res->STD_NP_Input.end(), s_res->STD_NP_Input.begin(), s_res->STD_NP_Input.end());
+  */
 }
 
 void InsuranceOutputDataStructure::PrintDataStructure(const std::any& context) const {
   const auto& insurance_context = std::any_cast<const InsuranceOutputContext&>(context);
-  if (!insurance_context.output) {
+  if (insurance_context.output.empty()) {
     Logger::Log(L"InsuranceOutputDataStructure is empty.\n");
     return;
   }
-  const auto& output = insurance_context.output;
+  // const auto& output = insurance_context.output;
 
   Logger::Log(L"InsuranceOutputDataStructure contents:\n");
 
-  Logger::Log(L"  tVn_Input (Row 0): ");
-  for (double val : output->tVn_Input[0]) {
-    Logger::Log(L"%.2f ", val);
-  }
-  Logger::Log(L"\n");
+  for (const auto& iter : insurance_context.output) {
+    Logger::Log(L"  tVn_Input (Row 0): ");
+    for (double val : iter->tVn_Input[0]) {
+      Logger::Log(L"%.2f ", val);
+    }
+    Logger::Log(L"\n");
 
-  Logger::Log(L"  tVn_Input (Row 1): ");
-  for (double val : output->tVn_Input[1]) {
-    Logger::Log(L"%.2f ", val);
-  }
-  Logger::Log(L"\n");
+    Logger::Log(L"  tVn_Input (Row 1): ");
+    for (double val : iter->tVn_Input[1]) {
+      Logger::Log(L"%.2f ", val);
+    }
+    Logger::Log(L"\n");
 
-  Logger::Log(L"  Alpha_ALD_Input: ");
-  for (double val : output->Alpha_ALD_Input) {
-    Logger::Log(L"%.2f ", val);
-  }
-  Logger::Log(L"\n");
+    Logger::Log(L"  Alpha_ALD_Input: ");
+    for (double val : iter->Alpha_ALD_Input) {
+      Logger::Log(L"%.2f ", val);
+    }
+    Logger::Log(L"\n");
 
-  Logger::Log(L"  NP_beta_Input: ");
-  for (double val : output->NP_beta_Input) {
-    Logger::Log(L"%.2f ", val);
-  }
-  Logger::Log(L"\n");
+    Logger::Log(L"  NP_beta_Input: ");
+    for (double val : iter->NP_beta_Input) {
+      Logger::Log(L"%.2f ", val);
+    }
+    Logger::Log(L"\n");
 
-  Logger::Log(L"  STD_NP_Input: ");
-  for (double val : output->STD_NP_Input) {
-    Logger::Log(L"%.2f ", val);
+    Logger::Log(L"  STD_NP_Input: ");
+    for (double val : iter->STD_NP_Input) {
+      Logger::Log(L"%.2f ", val);
+    }
+    Logger::Log(L"\n");
   }
-  Logger::Log(L"\n");
 }

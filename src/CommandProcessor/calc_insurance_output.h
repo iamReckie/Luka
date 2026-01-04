@@ -21,11 +21,21 @@
 #include <vector>
 
 #include "CommandProcessor/command_processor.h"
+#include "DataProcessor/insurance_output_data_structure.h"
+
 class CalcInsuranceOutputCommand : public BaseCommand {
  public:
   explicit CalcInsuranceOutputCommand(std::shared_ptr<DataHelper> helper)
       : BaseCommand(helper) {}
-  void Execute(const YAML::Node& command_data) override;
-  std::vector<std::wstring> SplitAndConvertToWString(const std::string& input);
+  void Execute(const YAML::Node &command_data) override;
+  std::vector<std::wstring> SplitAndConvertToWString(const std::string &input);
+  void ProcessSingleCommand(const YAML::Node &cmd);
+
+ private:
+  void ProcessVariables(const YAML::Node &variables_node,
+                        InsuranceOutputIndex &insurance_output_result_index);
+  void ProcessFile(const std::wstring &file_name,
+                   const YAML::Node &variables_node,
+                   InsuranceOutputIndex &insurance_output_result_index);
 };
 #endif  // SRC_COMMANDPROCESSOR_CALC_INSURANCE_OUTPUT_H_

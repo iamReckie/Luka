@@ -33,7 +33,7 @@ struct InsuranceOutput {
 };
 
 struct InsuranceOutputContext {
-  std::shared_ptr<InsuranceOutput> output;
+  std::vector<std::shared_ptr<InsuranceOutput>> output;
 };
 
 class InsuranceOutputDataStructure : public IDataStructure {

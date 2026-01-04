@@ -6,16 +6,16 @@
       "type": "shell",
       "command": "cmake",
       "args": [
-        "-S", ".",
-        "-B", "build",
-        "-G", "MinGW Makefiles"
+        "-S",
+        ".",
+        "-B",
+        "Debug",
+        "-G",
+        "Ninja",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
       ],
-      "options": {
-        "env": {
-          "CC": "gcc",
-          "CXX": "g++"
-        }
-      },
+      "group": "build",
       "problemMatcher": []
     },
     {
@@ -23,17 +23,49 @@
       "type": "shell",
       "command": "cmake",
       "args": [
-        "--build", "build",
+        "--build",
+        "Debug",
         "--verbose"
       ],
-      "problemMatcher": [],
-      "dependsOn": ["CMake Configure"]
+      "group": "build",
+      "problemMatcher": "$gcc",
+      "dependsOn": [
+        "CMake Configure"
+      ]
     },
     {
       "label": "Run Executable",
       "type": "shell",
-      "command": "${workspaceFolder}/build/bin/NowActuary.exe",
-      "dependsOn": ["CMake Build"]
+      "command": "${workspaceFolder}/Debug/bin/Luka",
+      "dependsOn": [
+        "CMake Build"
+      ],
+      "group": "test"
+    },
+    {
+      "label": "Run Cpplint",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--build",
+        "Debug",
+        "--target",
+        "run_cpplint"
+      ],
+      "problemMatcher": {
+        "owner": "cpplint",
+        "fileLocation": [
+          "relative",
+          "${workspaceFolder}"
+        ],
+        "pattern": {
+          "regexp": "^(.+):(\\d+):\\s+(.+)\\s+\\[(.+)\\]\\s+\\[(\\d+)\\]$",
+          "file": 1,
+          "line": 2,
+          "message": 3,
+          "code": 4
+        }
+      }
     }
   ]
 }

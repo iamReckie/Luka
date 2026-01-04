@@ -1,16 +1,48 @@
 {
-  "editor.formatOnSave": true,
-  // C/C++ 파일에 대해 Clang-Format 사용
-  "[cpp]": {
-    "editor.defaultFormatter": "xaver.clang-format"
-  },
-  "[c]": {
-    "editor.defaultFormatter": "xaver.clang-format"
-  },
-  // Clang-Format을 기본 포매터로 지정
-  "editor.defaultFormatter": "xaver.clang-format",
-  // Clang-Format 스타일 파일 사용
-  "clang-format.style": "file",
-  // Clang-Format 실행 파일 경로(필요시 수정)
-  "C_Cpp.clang_format_path": "/usr/bin/clang-format"
+    //"editor.fontFamily": "D2CodingLigature Nerd Font, 'Courier New', monospace",
+    "editor.fontFamily": "D2CodingLigature Nerd Font, 'D2CodingLigature Nerd Font', D2CodingLigature Nerd Font",
+    "workbench.colorTheme": "Catppuccin Macchiato",
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "debug.inlineValues": "on",
+    "code-runner.runInTerminal": true,
+    "security.workspace.trust.untrustedFiles": "open",
+    "clangd.path": "clangd",
+    "clangd.formatting.style": "file",
+    "clangd.arguments": [
+        "--compile-commands-dir=Debug"
+    ],
+    // C/C++ 파일에 대해 Clang-Format 사용
+    "[cpp]": {
+        "editor.defaultFormatter": "xaver.clang-format",
+        "editor.formatOnSave": true
+    },
+    "[c]": {
+        "editor.defaultFormatter": "xaver.clang-format",
+        "editor.formatOnSave": true
+    },
+    "multiCommand.commands": [
+        {
+            "command": "multiCommand.maximizeAndFocusTerminal",
+            "sequence": [
+                "workbench.action.toggleMaximizedPanel",
+                "workbench.action.terminal.focus",
+            ]
+        },
+        {
+            "command": "multiCommand.restoreAndFocusEditor",
+            "sequence": [
+                "workbench.action.toggleMaximizedPanel",
+                "workbench.action.focusActiveEditorGroup"
+            ]
+        }
+    ],
+    // Clang-Format을 기본 포매터로 지정
+    "editor.defaultFormatter": "xaver.clang-format",
+        // Clang-Format 스타일 파일 사용
+        "clang-format.style": "file",
+        // Clang-Format 실행 파일 경로(필요시 수정)
+        "C_Cpp.clang_format_path": "/usr/bin/clang-format",
+    "editor.formatOnSave": true,
+    "workbench.secondarySideBar.defaultVisibility": "hidden",
+    "github.copilot.nextEditSuggestions.enabled": true,
 }

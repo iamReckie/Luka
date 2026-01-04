@@ -44,8 +44,13 @@ int StartSequence(int argc, char* argv[]) {
     if (item.first.as<std::string>() == "scenario") {
       for (const auto& cmd : item.second) {
         Logger::Log(L"%ls\n", Ctw(cmd["command"].as<std::string>()).c_str());
+        // Some commands may not have a "name" field (e.g., calc_insurance_output with "files")
+        std::wstring name_value = L"";
+        if (cmd["name"]) {
+          name_value = Ctw(cmd["name"].as<std::string>());
+        }
         command_helper->ExecuteCommand(Ctw(cmd["command"].as<std::string>()),
-                                       Ctw(cmd["name"].as<std::string>()), cmd);
+                                       name_value, cmd);
       }
     }
   }
