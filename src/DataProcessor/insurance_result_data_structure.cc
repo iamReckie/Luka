@@ -23,6 +23,7 @@
 #include "DataProcessor/data_helper.h"
 #include "DataProcessor/tbl_data_structure.h"
 #include "Logger/logger.h"
+#include "Utility/abort.h"
 #include "Utility/string_utils.h"
 
 // Assuming these types based on usage in the project
@@ -34,33 +35,28 @@ void InsuranceResultDataStructure::ConstructDataStructure(std::any& context, con
 
   try {
     if (args.empty()) {
-      Logger::Log(L"Error: Arguments empty for InsuranceResultDataStructure\n");
-      return;
+      Abort(L"Arguments empty for InsuranceResultDataStructure\n");
     }
     std::shared_ptr<InsuranceResultIndex> result_index = std::any_cast<std::shared_ptr<InsuranceResultIndex>>(args[0]);
     if (!result_index) {
-      Logger::Log(L"Error: result_index is null\n");
-      return;
+      Abort(L"result_index is null\n");
     }
     std::shared_ptr<DataHelper> data_helper = GetDataHelper();
 
     if (!data_helper) {
-      Logger::Log(L"Error: DataHelper is null\n");
-      return;
+      Abort(L"DataHelper is null\n");
     }
 
     // Get Table Data Context
     std::any* table_data_any = data_helper->GetDataContext(key);
     if (!table_data_any) {
-      Logger::Log(L"Error: Table data context not found for key: %ls\n", key.c_str());
-      return;
+      Abort(L"Table data context not found for key: %ls\n", key.c_str());
     }
 
     // Get Code Data Context
     std::any* code_data_any = data_helper->GetDataContext(L"Code");
     if (!code_data_any) {
-      Logger::Log(L"Error: Code data context not found\n");
-      return;
+      Abort(L"Code data context not found\n");
     }
 
     // Cast to expected types

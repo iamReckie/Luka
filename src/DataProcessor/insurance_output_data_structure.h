@@ -27,6 +27,12 @@ struct InsuranceOutputIndex {
   std::pair<std::wstring, std::vector<std::vector<std::wstring>>> STD_NP_Input;
 };
 struct InsuranceOutput {
+  double alp;
+  double beta1;
+  double beta2;
+  double beta3;
+  double gamma;
+  int am;
   std::vector<std::vector<double>> tVn_Input;
   std::vector<double> Alpha_ALD_Input;
   std::vector<double> NP_beta_Input;

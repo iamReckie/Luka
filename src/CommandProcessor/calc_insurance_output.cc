@@ -19,6 +19,7 @@
 
 #include "DataProcessor/insurance_output_data_structure.h"
 #include "Logger/logger.h"
+#include "Utility/abort.h"
 #include "Utility/string_utils.h"
 std::vector<std::wstring>
 CalcInsuranceOutputCommand::SplitAndConvertToWString(const std::string &input) {
@@ -106,8 +107,7 @@ void CalcInsuranceOutputCommand::Execute(const YAML::Node &command_data) {
       ProcessFile(file_name, file_node["variables"], insurance_output_result_index);
     }
   } else {
-    Logger::Log(L"Error: Invalid command format - no 'name' field\n");
-    return;
+    Abort(L"Invalid command format - no 'name' field\n");
   }
 
   // Execute and print data once after processing all files

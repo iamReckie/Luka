@@ -17,6 +17,7 @@
 
 #include "Environments/global_environment.h"
 #include "Logger/logger.h"
+#include "Utility/abort.h"
 #include "Utility/excel_utils.h"
 #include "Utility/string_utils.h"
 #include "Utility/thread_pool.h"
@@ -77,8 +78,7 @@ void ReadExcelCommand::ExecuteMultiThread(OpenXLSX::XLWorksheet& wks,
   // 1. Prepare Processor
   auto processor = data_helper_->GetOrRegisterProcessor(sheet_name, sheet_type);
   if (!processor) {
-    Logger::Log(L"Failed to get processor for %ls\n", sheet_name.c_str());
-    return;
+    Abort(L"Failed to get processor for %ls\n", sheet_name.c_str());
   }
 
   std::vector<std::any> local_contexts;

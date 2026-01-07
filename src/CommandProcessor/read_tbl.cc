@@ -17,15 +17,15 @@
 #include <string>
 #include <vector>
 
-#include "Utility/string_utils.h"
 #include "Logger/logger.h"
+#include "Utility/abort.h"
+#include "Utility/string_utils.h"
 void ReadTblCommand::Execute(const YAML::Node &command_data) {
   std::string file_name = command_data["name"].as<std::string>();
   Logger::Log(L"Read %ls\n", Ctw(file_name).c_str());
   std::ifstream tbl_file(file_name);
   if (!tbl_file) {
-    Logger::Log(L"Failed to open file %ls\n", Ctw(file_name).c_str());
-    return;
+    Abort(L"Failed to open file %ls\n", Ctw(file_name).c_str());
   }
   std::string line{};
   std::wstring key{Ctw(file_name)};

@@ -20,6 +20,7 @@
 #include "DataProcessor/data_helper.h"
 #include "DataProcessor/expense_data_structure.h"
 #include "Logger/logger.h"
+#include "Utility/abort.h"
 #include "Utility/string_utils.h"
 void ExpenseOutputDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   (void)key;   // Unused parameter
@@ -30,8 +31,7 @@ void ExpenseOutputDataStructure::ConstructDataStructure(std::any& context, const
     std::shared_ptr<DataHelper> data_helper = GetDataHelper();
     const auto& expense_data_context_ptr = data_helper->GetDataContext(L"Expense");
     if (!expense_data_context_ptr) {
-      Logger::Log(L"Error: Failed to get ExpenseData context\n");
-      return;
+      Abort(L"Failed to get ExpenseData context\n");
     }
     const auto& expense_data_map = std::any_cast<const ExpenseDataStructure::ExpenseTableMap&>(*expense_data_context_ptr);
     for (const auto& [key_int, expense_tables] : expense_data_map) {
