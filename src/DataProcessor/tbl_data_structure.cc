@@ -18,8 +18,7 @@
 #include <string>
 
 #include "Logger/logger.h"
-void TableDataStructure::ConstructDataStructure(
-    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+void TableDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   auto& table_data_structure = std::any_cast<TableDataMap&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   std::wstringstream ss(input);
@@ -41,6 +40,17 @@ void TableDataStructure::ConstructDataStructure(
   }
   table_data_structure[key].emplace_back(numbers);
 }
+
+void TableDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
+  auto& target_map = std::any_cast<TableDataMap&>(target);
+  const auto& source_map = std::any_cast<const TableDataMap&>(source);
+
+  for (const auto& [key, val] : source_map) {
+    auto& target_vec = target_map[key];
+    target_vec.insert(target_vec.end(), val.begin(), val.end());
+  }
+}
+
 void TableDataStructure::PrintDataStructure(const std::any& context) const {
   const auto& table_data_structure = std::any_cast<const TableDataMap&>(context);
   for (const auto& [key, value] : table_data_structure) {

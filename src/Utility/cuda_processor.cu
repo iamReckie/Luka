@@ -77,8 +77,7 @@ void PrintCudaDeviceInfo() {
 }
 
 
-bool ProcessRowsWithCuda(
-    const std::vector<std::vector<std::pair<int, std::wstring>>>& row_data) {
+bool ProcessRowsWithCuda(const std::vector<std::vector<std::pair<int, std::wstring>>>& row_data) {
   // Always print device info
   PrintCudaDeviceInfo();
   if (!IsCudaAvailable()) {

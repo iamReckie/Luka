@@ -19,8 +19,7 @@
 #include <vector>
 
 #include "Logger/logger.h"
-void SRatioDataStructure::ConstructDataStructure(
-    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+void SRatioDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   auto& sratio_table = std::any_cast<SRatioTableMap&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);
@@ -95,6 +94,17 @@ void SRatioDataStructure::ConstructDataStructure(
       break;
   }
 }
+
+void SRatioDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
+  auto& target_map = std::any_cast<SRatioTableMap&>(target);
+  const auto& source_map = std::any_cast<const SRatioTableMap&>(source);
+
+  for (const auto& [key, val] : source_map) {
+    auto& target_vec = target_map[key];
+    target_vec.insert(target_vec.end(), val.begin(), val.end());
+  }
+}
+
 void SRatioDataStructure::PrintDataStructure(const std::any& context) const {
   const auto& sratio_table = std::any_cast<const SRatioTableMap&>(context);
   for (const auto& entry : sratio_table) {

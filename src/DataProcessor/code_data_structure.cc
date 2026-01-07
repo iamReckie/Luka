@@ -20,8 +20,7 @@
 
 #include "DataProcessor/excel_columns.h"
 #include "Logger/logger.h"
-void CodeDataStructure::ConstructDataStructure(
-    std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+void CodeDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   auto& code_context = std::any_cast<CodeDataContext&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);
@@ -73,6 +72,16 @@ void CodeDataStructure::ConstructDataStructure(
       break;
   }
 }
+
+void CodeDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
+  auto& target_ctx = std::any_cast<CodeDataContext&>(target);
+  const auto& source_ctx = std::any_cast<const CodeDataContext&>(source);
+
+  for (const auto& [key, val] : source_ctx.code_table) {
+    target_ctx.code_table[key] = val;
+  }
+}
+
 void CodeDataStructure::PrintDataStructure(const std::any& context) const {
   const auto& code_context = std::any_cast<const CodeDataContext&>(context);
   for (const auto& entry : code_context.code_table) {

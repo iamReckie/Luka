@@ -14,9 +14,10 @@
 #include "CommandProcessor/read_excel.h"
 
 #include <OpenXLSX.hpp>
-#include <thread>
 
+#include "Environments/global_environment.h"
 #include "Logger/logger.h"
+#include "Utility/abort.h"
 #include "Utility/excel_utils.h"
 #include "Utility/string_utils.h"
 #include "Utility/thread_pool.h"
@@ -38,14 +39,14 @@ ReadExcelCommand::get_cell_value(const OpenXLSX::XLCellValue& cell_value) {
   }
 }
 
-void ReadExcelCommand::ProcessRow(const std::vector<std::pair<int, std::wstring>>& cells, const std::wstring& sheet_name, const std::wstring& sheet_type) {
+void ReadExcelCommand::ProcessRow(const std::vector<std::pair<int, std::wstring>>& cells, const std::wstring& sheet_name, const std::wstring& sheet_type, std::any* context) {
   std::wstring key = L"";
   for (const auto& [col, cell_string] : cells) {
     if (cell_string.empty()) {
       continue;
     }
     std::vector<std::any> args{cell_string, col};
-    data_helper_->ExecuteData(sheet_name, key, sheet_type, args);
+    data_helper_->ExecuteData(sheet_name, key, sheet_type, args, context);
   }
 }
 void ReadExcelCommand::ExecuteSingleThread(OpenXLSX::XLWorksheet& wks,
@@ -72,29 +73,68 @@ void ReadExcelCommand::ExecuteMultiThread(OpenXLSX::XLWorksheet& wks,
                                           const std::vector<int>& ranges,
                                           const std::wstring& sheet_name,
                                           const std::wstring& sheet_type) {
-  ThreadPool pool;
   int row_count = ranges[1] - ranges[0] + 1;
-  Logger::Log(L"Processing %d rows in multi thread mode\n", row_count);
 
-  for (int row = ranges[0]; row <= ranges[1]; row++) {
-    // Read all cells for this row on the main thread
-    std::vector<std::pair<int, std::wstring>> row_cells;
-    for (int col = ranges[2]; col <= ranges[3]; col++) {
-      OpenXLSX::XLCellReference cell_ref(row, col);
-      OpenXLSX::XLCellValue cell_value = wks.cell(cell_ref).value();
-      std::wstring cell_string = get_cell_value(cell_value);
-      if (!cell_string.empty()) {
-        row_cells.emplace_back(col, std::move(cell_string));
-      }
+  // 1. Prepare Processor
+  auto processor = data_helper_->GetOrRegisterProcessor(sheet_name, sheet_type);
+  if (!processor) {
+    Abort(L"Failed to get processor for %ls\n", sheet_name.c_str());
+  }
+
+  std::vector<std::any> local_contexts;
+
+  {
+    ThreadPool pool;
+    int num_workers = pool.GetNumWorkers();
+    Logger::Log(L"Processing %d rows in multi thread mode with %d workers\n", row_count, num_workers);
+
+    local_contexts.resize(num_workers);
+    for (int i = 0; i < num_workers; ++i) {
+      local_contexts[i] = processor->CreateContext();
     }
 
-    // Move the collected row_cells into the task so workers don't access OpenXLSX
-    pool.EnqueueTask([this, row_cells = std::move(row_cells), sheet_name,
-                      sheet_type]() mutable {
-      ProcessRow(row_cells, sheet_name, sheet_type);
-    });
-  }
-  // Wait for all tasks to complete in ThreadPool destructor
+    int rows_per_worker = row_count / num_workers;
+    int remainder = row_count % num_workers;
+    int current_row = ranges[0];
+
+    for (int i = 0; i < num_workers; ++i) {
+      int start_row = current_row;
+      int count = rows_per_worker + (i < remainder ? 1 : 0);
+      int end_row = start_row + count - 1;
+      current_row += count;
+
+      if (count == 0) {
+        continue;
+      }
+
+      std::vector<std::vector<std::pair<int, std::wstring>>> chunk_data;
+      chunk_data.reserve(count);
+
+      for (int r = start_row; r <= end_row; ++r) {
+        std::vector<std::pair<int, std::wstring>> row_cells;
+        for (int col = ranges[2]; col <= ranges[3]; col++) {
+          OpenXLSX::XLCellReference cell_ref(r, col);
+          OpenXLSX::XLCellValue cell_value = wks.cell(cell_ref).value();
+          std::wstring cell_string = get_cell_value(cell_value);
+          if (!cell_string.empty()) {
+            row_cells.emplace_back(col, std::move(cell_string));
+          }
+        }
+        chunk_data.push_back(std::move(row_cells));
+      }
+
+      std::any* ctx_ptr = &local_contexts[i];
+
+      pool.EnqueueTask([this, data = std::move(chunk_data), sheet_name, sheet_type, ctx_ptr]() {
+        for (const auto& row : data) {
+          ProcessRow(row, sheet_name, sheet_type, ctx_ptr);
+        }
+      });
+    }
+  }  // Pool destroyed, waits for all tasks.
+
+  // 2. Merge Results
+  data_helper_->MergeContexts(sheet_name, local_contexts);
 }
 
 void ReadExcelCommand::ExecuteCuda(OpenXLSX::XLWorksheet& wks,
@@ -172,6 +212,7 @@ void ReadExcelCommand::Execute(const YAML::Node& command_data) {
 
     // Use different processing method depending on execution mode
     Environments::ExecutionMode core_type = Environments::GlobalEnvironment::GetInstance().GetCoreType();
+    std::cout << "Current Execution Mode: " << static_cast<int>(core_type) << std::endl;
     switch (core_type) {
       case Environments::ExecutionMode::SINGLE_THREAD:
         ExecuteSingleThread(wks, ranges, sheet_name, sheet_type);
@@ -183,7 +224,9 @@ void ReadExcelCommand::Execute(const YAML::Node& command_data) {
         ExecuteCuda(wks, ranges, sheet_name, sheet_type);
         break;
     }
-
     data_helper_->PrintData(sheet_name);
   }
+  // Do expense output construction after reading excel is finished.
+  std::wstring key = L"";
+  data_helper_->ExecuteData(L"ExpenseOutput", key, L"ExpenseOutput", {}, nullptr);
 }

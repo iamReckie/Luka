@@ -104,6 +104,16 @@ void TerminationDataStructure::ConstructDataStructure(
       break;
   }
 }
+
+void TerminationDataStructure::MergeDataStructure(std::any& target, const std::any& source) {
+  auto& target_map = std::any_cast<TerminationTableMap&>(target);
+  const auto& source_map = std::any_cast<const TerminationTableMap&>(source);
+
+  for (const auto& [key, val] : source_map) {
+    target_map[key] = val;
+  }
+}
+
 void TerminationDataStructure::PrintDataStructure(const std::any& context) const {
   const auto& termination_table =
       std::any_cast<const TerminationTableMap&>(context);

@@ -11,45 +11,34 @@
 //
 // Developed by: Luka
 // ============================================================================
-#ifndef SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_
-#define SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_
+#ifndef SRC_DATAPROCESSOR_EXPENSE_OUTPUT_DATA_STRUCTURE_H_
+#define SRC_DATAPROCESSOR_EXPENSE_OUTPUT_DATA_STRUCTURE_H_
 #include <any>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "DataProcessor/data_processor.h"
-struct SRatioTable {
-  std::wstring name;
-  double standard_price;
-  int renewal;
-  int sex;
-  int age;
-  int category;
-  int real_category;
-  int due;
-  int real_due;
-  double adjust;
-  double regular;
-  double sratio;
-  double min_s;
-  double apply_alpha;
-  double standard_alpha;
-  bool reverse;
+struct ExpenseOutput {
+  double alp_in[10][30];
+  double beta1_in[10][30];
+  double beta2_in[10][30];
+  double beta3_in[10][30];
+  double gamma_in[10][30];
 };
-class SRatioDataStructure : public IDataStructure {
- public:
-  using SRatioTableMap = std::unordered_map<int, std::vector<std::shared_ptr<SRatioTable>>>;
+struct ExpenseOutputContext {
+  std::shared_ptr<ExpenseOutput> output;
+};
 
-  explicit SRatioDataStructure(std::shared_ptr<DataHelper> data_helper)
+class ExpenseOutputDataStructure : public IDataStructure {
+ public:
+  explicit ExpenseOutputDataStructure(std::shared_ptr<DataHelper> data_helper)
       : IDataStructure(data_helper) {}
   void ConstructDataStructure(std::any& context,
                               const std::vector<std::any>& args,
                               std::wstring& key) override;
   void MergeDataStructure(std::any& target, const std::any& source) override;
   void PrintDataStructure(const std::any& context) const override;
-  std::any CreateContext() const override { return SRatioTableMap(); }
+  std::any CreateContext() const override { return ExpenseOutputContext(); }
 };
-
-#endif  // SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_
+#endif  // SRC_DATAPROCESSOR_EXPENSE_OUTPUT_DATA_STRUCTURE_H_

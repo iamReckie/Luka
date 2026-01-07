@@ -26,6 +26,7 @@ class IDataStructure {
   virtual void ConstructDataStructure(std::any& context,
                                       const std::vector<std::any>& args,
                                       std::wstring& key) = 0;
+  virtual void MergeDataStructure(std::any& /*target*/, const std::any& /*source*/) {}
   virtual void PrintDataStructure(const std::any& context) const = 0;
   virtual std::any CreateContext() const = 0;
   virtual ~IDataStructure() = default;

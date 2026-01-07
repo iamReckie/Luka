@@ -19,13 +19,16 @@
 #include <fstream>
 #include <iostream>
 #include <locale>
+#include <memory>
 #include <mutex>
+#include <sstream>
 #include <string>
-// Logger with lock-free atomic flag and mutex for thread-safe file I/O
+#include <thread>
+
+// Logger with single output file
 class Logger {
  public:
   static void Log(const wchar_t* format, ...) {
-    // Quick lock-free atomic check (acquire memory order)
     if (!GetInstance().is_initialized_.load(std::memory_order_acquire)) {
       return;
     }
@@ -39,18 +42,17 @@ class Logger {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
     std::string str_buffer = converter.to_bytes(wstr_buffer);
 
-    // Lock only for file I/O
-    {
-      std::lock_guard<std::mutex> lock(GetInstance().file_mutex_);
-      if (GetInstance().log_file.is_open()) {
-        printf("%s", str_buffer.c_str());
-        GetInstance().log_file << str_buffer << std::flush;
-      }
+    std::lock_guard<std::mutex> lock(GetInstance().mutex_);
+    if (GetInstance().file_stream_.is_open()) {
+      GetInstance().file_stream_ << str_buffer << std::flush;
     }
+    if (GetThreadLocalStream().is_open()) {
+      GetThreadLocalStream() << str_buffer << std::flush;
+    }
+    printf("%s", str_buffer.c_str());
   }
 
   static void Log(const char* format, ...) {
-    // Quick lock-free atomic check (acquire memory order)
     if (!GetInstance().is_initialized_.load(std::memory_order_acquire)) {
       return;
     }
@@ -61,32 +63,41 @@ class Logger {
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
 
-    // Lock only for file I/O
-    {
-      std::lock_guard<std::mutex> lock(GetInstance().file_mutex_);
-      if (GetInstance().log_file.is_open()) {
-        printf("%s", buffer);
-        GetInstance().log_file << buffer << std::flush;
-      }
+    std::lock_guard<std::mutex> lock(GetInstance().mutex_);
+    if (GetInstance().file_stream_.is_open()) {
+      GetInstance().file_stream_ << buffer << std::flush;
+    }
+    if (GetThreadLocalStream().is_open()) {
+      GetThreadLocalStream() << buffer << std::flush;
+    }
+    printf("%s", buffer);
+  }
+
+  static void StartSecondaryLog(const std::string& file_name) {
+    if (GetThreadLocalStream().is_open()) {
+      GetThreadLocalStream().close();
+    }
+    GetThreadLocalStream().open(file_name, std::ios::out);
+  }
+
+  static void StopSecondaryLog() {
+    if (GetThreadLocalStream().is_open()) {
+      GetThreadLocalStream().close();
     }
   }
 
   static void Initialize(const std::string& file_name) {
-    std::lock_guard<std::mutex> lock(GetInstance().file_mutex_);
-    if (std::ifstream(file_name)) {
-      std::remove(file_name.c_str());
-    }
-    GetInstance().log_file.open(file_name, std::ios::app);
-    // Set initialized flag with release memory order
+    std::lock_guard<std::mutex> lock(GetInstance().mutex_);
+    GetInstance().file_stream_.open(file_name, std::ios::out);
     GetInstance().is_initialized_.store(true, std::memory_order_release);
   }
 
   static void Finalize() {
-    std::lock_guard<std::mutex> lock(GetInstance().file_mutex_);
-    GetInstance().is_initialized_.store(false, std::memory_order_release);
-    if (GetInstance().log_file.is_open()) {
-      GetInstance().log_file.close();
+    std::lock_guard<std::mutex> lock(GetInstance().mutex_);
+    if (GetInstance().file_stream_.is_open()) {
+      GetInstance().file_stream_.close();
     }
+    GetInstance().is_initialized_.store(false, std::memory_order_release);
   }
 
  private:
@@ -100,8 +111,13 @@ class Logger {
     return instance;
   }
 
-  std::ofstream log_file;
-  std::mutex file_mutex_;                      // Protects log_file access
-  std::atomic<bool> is_initialized_{false};    // Lock-free initialization flag
+  static std::ofstream& GetThreadLocalStream() {
+    static thread_local std::ofstream stream;
+    return stream;
+  }
+
+  std::atomic<bool> is_initialized_{false};
+  std::ofstream file_stream_;
+  std::mutex mutex_;
 };
 #endif  // SRC_LOGGER_LOGGER_H_

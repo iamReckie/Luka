@@ -20,7 +20,6 @@
 #include <string>
 
 #include "CommandProcessor/command_processor.h"
-#include "Environments/environment_parser.h"
 #include "Logger/logger.h"
 #include "Utility/string_utils.h"
 int StartSequence(int argc, char* argv[]) {
@@ -41,13 +40,17 @@ int StartSequence(int argc, char* argv[]) {
     return -1;
   }
   // Run all the scenario items (environment or command)
-  Environments::EnvironmentParser::Parse(config);
   for (const auto& item : config) {
     if (item.first.as<std::string>() == "scenario") {
       for (const auto& cmd : item.second) {
         Logger::Log(L"%ls\n", Ctw(cmd["command"].as<std::string>()).c_str());
+        // Some commands may not have a "name" field (e.g., calc_insurance_output with "files")
+        std::wstring name_value = L"";
+        if (cmd["name"]) {
+          name_value = Ctw(cmd["name"].as<std::string>());
+        }
         command_helper->ExecuteCommand(Ctw(cmd["command"].as<std::string>()),
-                                       Ctw(cmd["name"].as<std::string>()), cmd);
+                                       name_value, cmd);
       }
     }
   }
