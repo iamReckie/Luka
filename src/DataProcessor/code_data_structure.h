@@ -27,6 +27,7 @@ struct CodeTable {
   int mhj;
   int re;
   int M_count;
+  std::wstring qx_key_;
   std::unordered_map<std::wstring, std::vector<float>> qx_table_;
 };
 struct CodeDataContext {

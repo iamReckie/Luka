@@ -58,6 +58,9 @@ void CodeDataStructure::ConstructDataStructure(std::any& context, const std::vec
     case CodeColumns::M_COUNT:
       current_code_table->M_count = toInt(input);
       break;
+    case CodeColumns::QX_TABLE_START:
+      current_code_table->qx_key_ = input;
+      break;
     default:
       if (column > CodeColumns::QX_TABLE_START && column <= CodeColumns::QX_TABLE_END) {
         current_code_table->qx_table_[input];  // default-construct entry
@@ -95,6 +98,7 @@ void CodeDataStructure::PrintDataStructure(const std::any& context) const {
     Logger::Log(L"  mhj: %d\n", current_code_table->mhj);
     Logger::Log(L"  re: %d\n", current_code_table->re);
     Logger::Log(L"  M_count: %d\n", current_code_table->M_count);
+    Logger::Log(L"  qx_key_: %ls\n", current_code_table->qx_key_.c_str());
 
     // qx_table
     Logger::Log(L"  qx_table:\n");

@@ -45,6 +45,9 @@ class QxDataStructure : public IDataStructure {
   void MergeDataStructure(std::any& target, const std::any& source) override;
   void PrintDataStructure(const std::any& context) const override;
   std::any CreateContext() const override { return QxTableMap(); }
+
+ private:
+  std::unordered_map<int, std::wstring> qx_name_map_;
 };
 
 #endif  // SRC_DATAPROCESSOR_QX_DATA_STRUCTURE_H_

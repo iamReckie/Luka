@@ -225,6 +225,11 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
 
       output_ptr->am = std::min(nn, 20);
 
+      for (int i = 0; i < 2; ++i) {
+        int w = 0;
+        i == 1 ? w = 110 : w = 100;
+      }
+
       // Add this completed output_ptr to the context
       insurance_output_context.output.push_back(output_ptr);
     }
