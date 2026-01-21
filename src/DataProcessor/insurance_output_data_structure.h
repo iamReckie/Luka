@@ -37,7 +37,7 @@ struct InsuranceOutput {
   std::vector<double> Alpha_ALD_Input;
   std::vector<double> NP_beta_Input;
   std::vector<double> STD_NP_Input;
-  std::vector<std::vector<int>> qx;
+  std::vector<std::vector<double>> Qx;
 };
 
 struct InsuranceOutputContext {

@@ -1,7 +1,7 @@
 {
     //"editor.fontFamily": "D2CodingLigature Nerd Font, 'Courier New', monospace",
     "editor.fontFamily": "D2CodingLigature Nerd Font, 'D2CodingLigature Nerd Font', D2CodingLigature Nerd Font",
-    "workbench.colorTheme": "Catppuccin Macchiato",
+    "workbench.colorTheme": "Catppuccin Mocha",
     "C_Cpp.intelliSenseEngine": "disabled",
     "debug.inlineValues": "on",
     "code-runner.runInTerminal": true,

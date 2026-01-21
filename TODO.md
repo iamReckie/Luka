@@ -1,6 +1,6 @@
 # TODO
-- Qx Table code를 만들었어. 이건 data_helper에 있어.
-- 이제 insurance_output_data_Structure.cc에서 이미 Dnum은 있으니 이것을 통해 실제 어떤 Qx Table이 필요한지 이름을 추출하고 그 이름을 통해 Qx table을 가져와서 그 다음을 진행해야돼.
+- qx_in을 만들어야 한다.
+- qx_in은 code setup을 하면서 진행한다.
 
 ## Overview
 - Qx Calculation부분을 해야한다.

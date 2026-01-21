@@ -117,18 +117,18 @@ std::map<int, std::map<int, double>> QxDistribution(int m_count,
                                                     std::function<double(int, int, int, int)> qx_in,
                                                     int dnum,
                                                     int sex) {
-  std::map<int, std::map<int, double>> Qx;
+  std::map<int, std::map<int, double>> current_qx;
 
   // Loop through mortality tables: ii = 0 to M(Dnum) - 1
   for (int ii = 0; ii < m_count; ++ii) {
     // Loop through ages: jj = 0 to 112
     for (int jj = 0; jj <= 112; ++jj) {
       // Qx(ii, jj) = Qx_in(Dnum, ii, Sex, jj)
-      Qx[ii][jj] = qx_in(dnum, ii, sex, jj);
+      current_qx[ii][jj] = qx_in(dnum, ii, sex, jj);
     }
   }
 
-  return Qx;
+  return current_qx;
 }
 
 // Distribute lapse and reinstatement rates (HJY)

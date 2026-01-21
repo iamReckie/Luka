@@ -20,6 +20,11 @@
 #include <vector>
 
 #include "DataProcessor/data_processor.h"
+struct SubCodeTable {
+  double pay;
+  double fst;
+  double snd;
+};
 struct CodeTable {
   int dnum;
   std::wstring name;
@@ -27,13 +32,15 @@ struct CodeTable {
   int mhj;
   int re;
   int M_count;
-  std::wstring qx_key_;
-  std::unordered_map<std::wstring, std::vector<float>> qx_table_;
+  std::unordered_map<std::wstring, std::shared_ptr<SubCodeTable>> sub_code_table;
+  // qx_in[C1][gender][age]: C1(0-4), gender(0=Male,1=Female), age(0-119)
+  double qx_in[5][2][120] = {{{0.0}}};
 };
 struct CodeDataContext {
   std::unordered_map<int, std::shared_ptr<CodeTable>> code_table;
   int current_index_of_qx_table = 0;
   std::unordered_map<int, std::wstring> table_for_qx_table;
+  std::unordered_map<int, std::wstring> qx_key_map;  // C1 index -> qx_key
 };
 
 class CodeDataStructure : public IDataStructure {

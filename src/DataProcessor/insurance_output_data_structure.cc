@@ -18,11 +18,13 @@
 #include <string>
 #include <vector>
 
+#include "Calculation/actuarial_calculator.h"
 #include "DataProcessor/code_data_structure.h"
 #include "DataProcessor/data_helper.h"
 #include "DataProcessor/expense_data_structure.h"
 #include "DataProcessor/expense_output_data_structure.h"
 #include "DataProcessor/insurance_result_data_structure.h"
+#include "DataProcessor/qx_data_structure.h"
 #include "DataProcessor/tbl_data_structure.h"
 #include "Logger/logger.h"
 #include "Utility/abort.h"
@@ -122,12 +124,15 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
       int idx_NP_1 = -1, idx_NP_2 = -1;
       int idx_Alpha_1 = -1, idx_Alpha_2 = -1;
       int idx_STD_NP_1 = -1, idx_STD_NP_2 = -1;
-      int nn = insurance_result->nn, mm = insurance_result->mm, bojong = insurance_result->bojong;
+      int nn = insurance_result->nn, mm = insurance_result->mm, bojong = insurance_result->bojong /*, x = insurance_result->x*/;
 
       // Get dnum from code_map using bojong
       int dnum = 0;
       auto code_it = code_map.find(bojong);
       dnum = code_it->second->dnum;
+
+      // Get the code_table for this bojong
+      auto code_table = code_it->second.get();
 
       if (insurance_output_index.tVn_Input.second.size() > 0 && !insurance_output_index.tVn_Input.second[0].empty()) {
         idx_tVn_1_loop = parse_index(insurance_output_index.tVn_Input.second[0].back());
@@ -225,10 +230,70 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
 
       output_ptr->am = std::min(nn, 20);
 
+      // Populate Qx array using qx_in from code_table
+      // For ii = 0 To M(Dnum) - 1
+      //   For jj = 0 To 112
+      //     Qx(ii, jj) = Qx_in(Dnum, ii, Sex, jj)
+      // Create lambda to access qx_in: qx_in(dnum, table_idx, sex, age)
+      auto qx_in_func = [code_table](int /*dnum*/, int table_idx, int gender, int age) -> double {
+        if (table_idx >= 0 && table_idx < 5 && gender >= 0 && gender < 2 && age >= 0 && age < 120) {
+          return code_table->qx_in[table_idx][gender][age];
+        }
+        return 0.0;
+      };
+      // Loop for sex = 0 (male), 1 (female)
       for (int i = 0; i < 2; ++i) {
-        int w = 0;
-        i == 1 ? w = 110 : w = 100;
+        int sex = i;
+        [[maybe_unused]] int w = (i == 1) ? 110 : 100;
+        // Call ActuarialCalculator::QxDistribution
+        auto qx_map = ActuarialCalculator::QxDistribution(code_table->M_count, qx_in_func, dnum, sex);
+        // Convert map to vector format for output_ptr->Qx
+        output_ptr->Qx.resize(code_table->M_count);
+        for (int ii = 0; ii < code_table->M_count; ++ii) {
+          output_ptr->Qx[ii].resize(113);
+          for (int jj = 0; jj <= 112; ++jj) {
+            output_ptr->Qx[ii][jj] = qx_map[ii][jj];
+          }
+        }
+
+        if (code_table->mhj == 0) {
+        } else {
+        }
       }
+
+      std::wstring qx_name = data_helper->GetQxNameMapping(dnum);
+
+      Logger::Log(L"Getting qx_name (sheet name) for dnum %d: %ls\n", dnum, qx_name.c_str());
+
+      auto* qx_context_ptr = data_helper->GetDataContext(qx_name);
+      if (!qx_context_ptr) {
+        Abort(L"Failed to get qx table context for name: %ls\n", qx_name.c_str());
+      }
+      const auto& qx_table_map = std::any_cast<const QxDataStructure::QxTableMap&>(*qx_context_ptr);
+
+      Logger::Log(L"QxTableMap keys: ");
+      for (const auto& [key, _] : qx_table_map) {
+        Logger::Log(L"%ls ", key.c_str());
+      }
+      Logger::Log(L"\n");
+
+      // Get qx_key from sub_code_table
+      // VBA: For C1 = 0 To M(Dnum) - 1, we need to determine which C1 to use
+      // For now, use the first one or find matching one
+      if (code_table->sub_code_table.empty()) {
+        Abort(L"sub_code_table is empty for bojong %d\n", bojong);
+      }
+
+      // Get the first qx_key (or you can use mm to determine which one)
+      std::wstring qx_key = code_table->sub_code_table.begin()->first;
+      Logger::Log(L"Using qx_key: %ls\n", qx_key.c_str());
+
+      // Find qx values using qx_key
+      auto qx_it = qx_table_map.find(qx_key);
+      if (qx_it == qx_table_map.end()) {
+        Abort(L"qx table data not found for key: %ls in sheet: %ls\n", qx_key.c_str(), qx_name.c_str());
+      }
+      // const auto& qx_values = qx_it->second;
 
       // Add this completed output_ptr to the context
       insurance_output_context.output.push_back(output_ptr);
