@@ -14,6 +14,9 @@
 #include "Calculation/actuarial_calculator.h"
 
 #include <cmath>
+#include <memory>
+
+#include "DataProcessor/insurance_output_data_structure.h"
 
 namespace ActuarialCalculator {
 
@@ -61,37 +64,113 @@ double ComputationTermPr(const int& x, const int& nn, const int& mm, const int& 
   return Term_Pr;
 }
 
-// Calculate general commutation functions
-// Sub Computation() in VBA
-CommutationFunctions Computation(const int& x, const int& nn,
-                                 QFunction Qx, QwFunction Qxw, VFunction V0, VFunction V1) {
-  CommutationFunctions cf;
+double V0Calculation(double n) {
+  return 1.0 / std::pow(1.0 + 0.025, n);
+}
 
-  // Forward loop: A = x to x + nn
-  for (int A = x; A <= x + nn; ++A) {
-    int xt = A - x;
+double V1Calculation(double n) {
+  return 1.0 / std::pow(1.0 + 0.025, n + 0.5);
+}
 
-    // Initialize lx and lpx (survivors and premium payers)
-    if (xt == 0) {
-      cf.lx[A] = 100000.0;
-      cf.lpx[A] = 100000.0;
-    } else {
-      cf.lx[A] = cf.lx[A - 1];
-      cf.lpx[A] = cf.lpx[A - 1];
+void PV(const int& nn1,
+        const int& w,
+        const double& current_pay1,
+        const double& current_pay2,
+        const double& current_fst1,
+        const double& current_fst2,
+        const double& current_C0x,
+        const double& current_C1x,
+        const double& current_M0x1,
+        const double& current_M0x2,
+        const double& current_M1x1,
+        const double& current_M1x2,
+        const int& JHJ_Flag) {
+  int kk = 0;
+  for (int nb = 1; nb < 5; ++nb) {
+    switch (nb) {
+      case 1:
+        kk = 1;
+        break;
+      case 2:
+        kk = 2;
+        break;
+      case 3:
+        kk = 4;
+        break;
+      case 4:
+        kk = 12;
+        break;
+      default:
+        break;
     }
+    double SUMx = Benefit_SUMx(nn1, w, current_pay1, current_pay2, current_fst1, current_fst2, current_C0x, current_C1x, current_M0x1, current_M0x2, current_M1x1, current_M1x2);
+    (void)SUMx;
+  }
+}
 
-    // Calculate Dx and Dpx (discounted survivors and premium payers)
-    cf.Dx[A] = cf.lx[A] * V0(xt);
-    cf.Dpx[A] = cf.lpx[A] * V0(xt);
+double Benefit_SUMx(const int& nn1,
+                    const int& w,
+                    const double& current_pay1,
+                    const double& current_pay2,
+                    const double& current_fst1,
+                    const double& current_fst2,
+                    const double& current_C0x,
+                    const double& current_C1x,
+                    const double& current_M0x1,
+                    const double& current_M0x2,
+                    const double& current_M1x1,
+                    const double& current_M1x2) {
+  // Sub Benefit_SUMx() in VBA
+  // SUMx = Pay(Dnum,0)*(Fst(Dnum,0)*C0x(x) + M0x(x+1) - [M0x(x+nn)])
+  //      + Pay(Dnum,1)*(Fst(Dnum,1)*C1x(x) + M1x(x+1) - [M1x(x+nn)])
+  // nn1 < w : finite insurance period (M0x/M1x terms include terminal subtraction)
+  // nn1 >= w: whole life (no terminal subtraction)
+  double sumX = 0.0;
+  if (nn1 < w) {
+    sumX = current_pay1 * (current_fst1 * current_C0x + current_M0x1 - current_M0x2) +
+           current_pay2 * (current_fst2 * current_C1x + current_M1x1 - current_M1x2);
+  } else {
+    sumX = current_pay1 * (current_fst1 * current_C0x + current_M0x1) +
+           current_pay2 * (current_fst2 * current_C1x + current_M1x1);
+  }
+  return sumX;
+}
 
-    // Calculate C0x (pure present value of death benefit)
-    cf.C0x[A] = cf.lx[A] * Qx(0, A) * V1(xt) * (1.0 - Qxw(A) / 2.0);
+void MxStep(std::shared_ptr<InsuranceOutput>& output_ptr, const int& nn, const int& x) {
+  // Backward loop: B = x + nn to x
+  for (int B = x + nn; B >= x; --B) {
+    int idx = B - x;
+    if (B == x + nn) {
+      output_ptr->Nx.push_back(output_ptr->Dx[idx]);
+      output_ptr->Npx.push_back(output_ptr->Dpx[idx]);
+      output_ptr->M0x.push_back(output_ptr->C0x[idx]);
+    } else {
+      output_ptr->Nx.insert(output_ptr->Nx.begin(), output_ptr->Nx.front() + output_ptr->Dx[idx]);
+      output_ptr->Npx.insert(output_ptr->Npx.begin(), output_ptr->Npx.front() + output_ptr->Dpx[idx]);
+      output_ptr->M0x.insert(output_ptr->M0x.begin(), output_ptr->M0x.front() + output_ptr->C0x[idx]);
+    }
+  }
+}
+
+void Computation(std::shared_ptr<InsuranceOutput>& output_ptr, const int& nn, const int& x) {
+  for (int i = x; i <= x + nn; ++i) {
+    int xt = i - x;
+    if (xt == 0) {
+      output_ptr->lx.push_back(100000.0);
+      output_ptr->lpx.push_back(100000.0);
+    } else {
+      double lx_val = output_ptr->lx.back();
+      output_ptr->lx.push_back(lx_val);
+      double lpx_val = output_ptr->lpx.back();
+      output_ptr->lpx.push_back(lpx_val);
+    }
+    output_ptr->Dx.push_back(output_ptr->lx.back() * V0Calculation(xt));
+    output_ptr->Dpx.push_back(output_ptr->lpx.back() * V0Calculation(xt));
+    output_ptr->C0x.push_back(output_ptr->lx.back() * output_ptr->Qx[0][i] * V1Calculation(xt) * (1.0 - output_ptr->Qxw[i] / 2.0));
   }
 
-  // Call Mx_Step for backward calculation
-  MxStep(x, nn, cf);
-
-  return cf;
+  // Call Mx_Step
+  MxStep(output_ptr, nn, x);
 }
 
 // Calculate Mx step by step (reverse accumulation)

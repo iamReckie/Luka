@@ -38,6 +38,15 @@ struct InsuranceOutput {
   std::vector<double> NP_beta_Input;
   std::vector<double> STD_NP_Input;
   std::vector<std::vector<double>> Qx;
+  std::vector<double> lx;
+  std::vector<double> lpx;
+  std::vector<double> Dx;
+  std::vector<double> Dpx;
+  std::vector<double> C0x;
+  std::vector<double> Qxw;
+  std::vector<double> Nx;
+  std::vector<double> Npx;
+  std::vector<double> M0x;
 };
 
 struct InsuranceOutputContext {

@@ -16,10 +16,12 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <utility>
 
 // Forward declaration
 struct InsuranceResult;
+struct InsuranceOutput;
 
 namespace ActuarialCalculator {
 
@@ -68,6 +70,45 @@ CommutationFunctions Computation(const int& x, const int& nn,
 // @param nn: Insurance period
 // @param cf: Commutation functions structure
 void MxStep(const int& x, const int& nn, CommutationFunctions& cf);
+
+// Overloaded version for InsuranceOutput pointer
+void MxStep(std::shared_ptr<InsuranceOutput>& output_ptr, const int& nn, const int& x);
+
+// Overloaded Computation for InsuranceOutput pointer
+void Computation(std::shared_ptr<InsuranceOutput>& output_ptr, const int& nn, const int& x);
+
+// V0 discount calculation (present value factor)
+double V0Calculation(double n);
+
+// V1 discount calculation (present value factor with half-year adjustment)
+double V1Calculation(double n);
+
+void PV(const int& nn1,
+        const int& w,
+        const double& current_pay1,
+        const double& current_pay2,
+        const double& current_fst1,
+        const double& current_fst2,
+        const double& current_C0x,
+        const double& current_C1x,
+        const double& current_M0x1,
+        const double& current_M0x2,
+        const double& current_M1x1,
+        const double& current_M1x2,
+        const int& JHJ_Flag);
+
+double Benefit_SUMx(const int& nn1,
+                    const int& w,
+                    const double& current_pay1,
+                    const double& current_pay2,
+                    const double& current_fst1,
+                    const double& current_fst2,
+                    const double& current_C0x,
+                    const double& current_C1x,
+                    const double& current_M0x1,
+                    const double& current_M0x2,
+                    const double& current_M1x1,
+                    const double& current_M1x2);
 
 // Distribute Qx values from input table
 // Sub Qx_Distribution() in VBA
