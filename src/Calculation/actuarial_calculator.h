@@ -18,7 +18,7 @@
 #include <map>
 #include <memory>
 #include <utility>
-
+#include <vector>
 // Forward declaration
 struct InsuranceResult;
 struct InsuranceOutput;

@@ -108,18 +108,18 @@ double V1Calculation(double n) {
 //   }
 // }
 
-double Benefit_SUMx(const int& nn1,
-                    const int& w,
-                    const double& current_pay1,
-                    const double& current_pay2,
-                    const double& current_fst1,
-                    const double& current_fst2,
-                    const double& current_C0x,
-                    const double& current_C1x,
-                    const double& current_M0x1,
-                    const double& current_M0x2,
-                    const double& current_M1x1,
-                    const double& current_M1x2) {
+double BenefitSUMx(const int& nn1,
+                   const int& w,
+                   const double& current_pay1,
+                   const double& current_pay2,
+                   const double& current_fst1,
+                   const double& current_fst2,
+                   const double& current_C0x,
+                   const double& current_C1x,
+                   const double& current_M0x1,
+                   const double& current_M0x2,
+                   const double& current_M1x1,
+                   const double& current_M1x2) {
   // Sub Benefit_SUMx() in VBA
   // SUMx = Pay(Dnum,0)*(Fst(Dnum,0)*C0x(x) + M0x(x+1) - [M0x(x+nn)])
   //      + Pay(Dnum,1)*(Fst(Dnum,1)*C1x(x) + M1x(x+1) - [M1x(x+nn)])
@@ -134,6 +134,38 @@ double Benefit_SUMx(const int& nn1,
            current_pay2 * (current_fst2 * current_C1x + current_M1x1);
   }
   return sumX;
+}
+
+double WBenefitSUMx(std::vector<double>& w_cx,
+                    std::vector<double>& w_mx,
+                    const int& x,
+                    const int& nn,
+                    const int& jhj_flag,
+                    const std::vector<double>& qxw,
+                    const std::vector<double>& rxw,
+                    const std::vector<std::vector<double>>& tvn_std_pj,
+                    const std::vector<std::vector<double>>& tvn_pj,
+                    const int& amt,
+                    const int& sex,
+                    const std::vector<double>& lx,
+                    const std::vector<std::vector<double>>& qx) {
+  for (int i = 0; i < nn; ++i) {
+    if (jhj_flag == 2) {
+      w_cx[x + i] = rxw[x + i] * ((tvn_std_pj[sex][i] + tvn_std_pj[sex][i + 1]) / 2.0 / amt) * lx[x + i] * qxw[x + i] * (1 - 0.5 * qx[0][x + i] * V1Calculation(i));
+    } else if (jhj_flag == 3) {
+      w_cx[x + i] = rxw[x + i] * ((tvn_pj[sex][i] + tvn_pj[sex][i + 1]) / 2.0 / amt) * lx[x + i] * qxw[x + i] * (1 - 0.5 * qx[0][x + i] * V1Calculation(i));
+    } else {
+      w_cx[x + i] = 0.0;
+    }
+  }
+  for (int i = x + nn; i > x; --i) {
+    if (i == x + nn) {
+      w_mx[i] = w_cx[i];
+    } else {
+      w_mx[i] = w_mx[i + 1] + w_cx[i];
+    }
+  }
+  return w_mx[x] - w_mx[x + nn];
 }
 
 void HjyDistribution(std::vector<double>& qxw,
