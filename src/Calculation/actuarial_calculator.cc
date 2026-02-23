@@ -72,41 +72,41 @@ double V1Calculation(double n) {
   return 1.0 / std::pow(1.0 + 0.025, n + 0.5);
 }
 
-void PV(const int& nn1,
-        const int& w,
-        const double& current_pay1,
-        const double& current_pay2,
-        const double& current_fst1,
-        const double& current_fst2,
-        const double& current_C0x,
-        const double& current_C1x,
-        const double& current_M0x1,
-        const double& current_M0x2,
-        const double& current_M1x1,
-        const double& current_M1x2,
-        const int& JHJ_Flag) {
-  int kk = 0;
-  for (int nb = 1; nb < 5; ++nb) {
-    switch (nb) {
-      case 1:
-        kk = 1;
-        break;
-      case 2:
-        kk = 2;
-        break;
-      case 3:
-        kk = 4;
-        break;
-      case 4:
-        kk = 12;
-        break;
-      default:
-        break;
-    }
-    double SUMx = Benefit_SUMx(nn1, w, current_pay1, current_pay2, current_fst1, current_fst2, current_C0x, current_C1x, current_M0x1, current_M0x2, current_M1x1, current_M1x2);
-    (void)SUMx;
-  }
-}
+// void PV(const int& nn1,
+//         const int& w,
+//         const double& current_pay1,
+//         const double& current_pay2,
+//         const double& current_fst1,
+//         const double& current_fst2,
+//         const double& current_C0x,
+//         const double& current_C1x,
+//         const double& current_M0x1,
+//         const double& current_M0x2,
+//         const double& current_M1x1,
+//         const double& current_M1x2,
+//         const int& JHJ_Flag) {
+//   int kk = 0;
+//   for (int nb = 1; nb < 5; ++nb) {
+//     switch (nb) {
+//       case 1:
+//         kk = 1;
+//         break;
+//       case 2:
+//         kk = 2;
+//         break;
+//       case 3:
+//         kk = 4;
+//         break;
+//       case 4:
+//         kk = 12;
+//         break;
+//       default:
+//         break;
+//     }
+//     double SUMx = Benefit_SUMx(nn1, w, current_pay1, current_pay2, current_fst1, current_fst2, current_C0x, current_C1x, current_M0x1, current_M0x2, current_M1x1, current_M1x2);
+//     (void)SUMx;
+//   }
+// }
 
 double Benefit_SUMx(const int& nn1,
                     const int& w,
@@ -134,6 +134,40 @@ double Benefit_SUMx(const int& nn1,
            current_pay2 * (current_fst2 * current_C1x + current_M1x1);
   }
   return sumX;
+}
+
+void HjyDistribution(std::vector<double>& qxw,
+                     std::vector<double>& rxw,
+                     const std::vector<std::vector<double>>& wx_b,
+                     const int& mm,
+                     const int& x,
+                     const int& nn,
+                     const int& jhj_flag) {
+  for (int i = 0; i < nn; ++i) {
+    qxw[x + i] = (i < 45) ? wx_b[(mm < 31 ? mm : 30)][i] : wx_b[(mm < 31 ? mm : 30)][44];
+    rxw[x + i] = (i < mm) ? 0.0 : 0.5;
+  }
+  if (jhj_flag < 2) {
+    qxw.clear();
+    rxw.clear();
+  }
+}
+
+void HjyStdDistribution(std::vector<double>& qxw,
+                        std::vector<double>& rxw,
+                        const std::vector<std::vector<double>>& wx_b,
+                        const int& am,
+                        const int& x,
+                        const int& nn,
+                        const int& jhj_flag) {
+  for (int i = 0; i < nn; ++i) {
+    qxw[x + i] = (i < 45) ? wx_b[(am < 31 ? am : 30)][i] : wx_b[(am < 31 ? am : 30)][44];
+    rxw[x + i] = (i < am) ? 0.0 : 0.5;
+  }
+  if (jhj_flag < 2) {
+    qxw.clear();
+    rxw.clear();
+  }
 }
 
 void MxStep(std::shared_ptr<InsuranceOutput>& output_ptr, const int& nn, const int& x) {
@@ -173,95 +207,23 @@ void Computation(std::shared_ptr<InsuranceOutput>& output_ptr, const int& nn, co
   MxStep(output_ptr, nn, x);
 }
 
-// Calculate Mx step by step (reverse accumulation)
-// Sub Mx_Step() in VBA
-void MxStep(const int& x, const int& nn, CommutationFunctions& cf) {
-  // Backward loop: B = x + nn to x
-  for (int B = x + nn; B >= x; --B) {
-    if (B == x + nn) {
-      cf.Nx[B] = cf.Dx[B];
-      cf.Npx[B] = cf.Dpx[B];
-      cf.M0x[B] = cf.C0x[B];
-    } else {
-      cf.Nx[B] = cf.Nx[B + 1] + cf.Dx[B];
-      cf.Npx[B] = cf.Npx[B + 1] + cf.Dpx[B];
-      cf.M0x[B] = cf.M0x[B + 1] + cf.C0x[B];
-    }
-  }
-}
-
 // Distribute Qx values from input table
 // Sub Qx_Distribution() in VBA
-std::map<int, std::map<int, double>> QxDistribution(int m_count,
-                                                    std::function<double(int, int, int, int)> qx_in,
-                                                    int dnum,
-                                                    int sex) {
+std::map<int, std::map<int, double>> QxDistribution(const int& m_count,
+                                                    const double qx_in[][2][120],
+                                                    const int& sex) {
   std::map<int, std::map<int, double>> current_qx;
 
   // Loop through mortality tables: ii = 0 to M(Dnum) - 1
   for (int ii = 0; ii < m_count; ++ii) {
     // Loop through ages: jj = 0 to 112
     for (int jj = 0; jj <= 112; ++jj) {
-      // Qx(ii, jj) = Qx_in(Dnum, ii, Sex, jj)
-      current_qx[ii][jj] = qx_in(dnum, ii, sex, jj);
+      // Qx(ii, jj) = Qx_in(ii, Sex, jj)
+      current_qx[ii][jj] = qx_in[ii][sex][jj];
     }
   }
 
   return current_qx;
-}
-
-// Distribute lapse and reinstatement rates (HJY)
-// Sub HJY_Distribution() in VBA
-std::pair<std::map<int, double>, std::map<int, double>> HJYDistribution(int x, int nn, int mm,
-                                                                        std::function<double(int, int)> Wx_B,
-                                                                        int JHJ_Flag) {
-  std::map<int, double> Qxw;  // Lapse rate
-  std::map<int, double> Rxw;  // Reinstatement rate
-
-  // If JHJ_Flag < 2, return empty maps (equivalent to Erase in VBA)
-  if (JHJ_Flag < 2) {
-    return {Qxw, Rxw};
-  }
-
-  // Loop: jj = 0 to nn
-  for (int jj = 0; jj <= nn; ++jj) {
-    // Qxw(x + jj) = IIf(jj < 45, Wx_B(IIf(mm < 31, mm, 30), jj), Wx_B(IIf(mm < 31, mm, 30), 44))
-    int period = (mm < 31) ? mm : 30;
-    int year = (jj < 45) ? jj : 44;
-    Qxw[x + jj] = Wx_B(period, year);
-
-    // Rxw(x + jj) = IIf(jj < mm, 0, 0.5)
-    Rxw[x + jj] = (jj < mm) ? 0.0 : 0.5;
-  }
-
-  return {Qxw, Rxw};
-}
-
-// Distribute standard lapse and reinstatement rates (HJY_STD)
-// Sub HJY_STD_Distribution() in VBA
-std::pair<std::map<int, double>, std::map<int, double>> HJYSTDDistribution(int x, int nn, int am,
-                                                                           std::function<double(int, int)> Wx_B,
-                                                                           int JHJ_Flag) {
-  std::map<int, double> Qxw;  // Lapse rate
-  std::map<int, double> Rxw;  // Reinstatement rate
-
-  // If JHJ_Flag < 2, return empty maps (equivalent to Erase in VBA)
-  if (JHJ_Flag < 2) {
-    return {Qxw, Rxw};
-  }
-
-  // Loop: jj = 0 to nn
-  for (int jj = 0; jj <= nn; ++jj) {
-    // Qxw(x + jj) = IIf(jj < 45, Wx_B(IIf(am < 31, am, 30), jj), Wx_B(IIf(am < 31, am, 30), 44))
-    int period = (am < 31) ? am : 30;
-    int year = (jj < 45) ? jj : 44;
-    Qxw[x + jj] = Wx_B(period, year);
-
-    // Rxw(x + jj) = IIf(jj < am, 0, 0.5)
-    Rxw[x + jj] = (jj < am) ? 0.0 : 0.5;
-  }
-
-  return {Qxw, Rxw};
 }
 
 }  // namespace ActuarialCalculator

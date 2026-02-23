@@ -112,28 +112,29 @@ double Benefit_SUMx(const int& nn1,
 
 // Distribute Qx values from input table
 // Sub Qx_Distribution() in VBA
-// @param M_count: Number of mortality tables (M(Dnum) in VBA)
-// @param Qx_in: Function to retrieve Qx values - Qx_in(dnum, table_idx, sex, age)
-// @param Dnum: Table number
-// @param Sex: Gender (0=male, 1=female)
+// @param m_count: Number of mortality tables (M(Dnum) in VBA)
+// @param qx_in: Mortality rate table - qx_in[table_idx][gender][age]
+// @param sex: Gender (0=male, 1=female)
 // @return: 2D map of Qx values [table_idx][age]
-std::map<int, std::map<int, double>> QxDistribution(int m_count,
-                                                    std::function<double(int, int, int, int)> qx_in,
-                                                    int dnum,
-                                                    int sex);
+std::map<int, std::map<int, double>> QxDistribution(const int& m_count,
+                                                    const double qx_in[][2][120],
+                                                    const int& sex);
 
-// Distribute lapse and reinstatement rates (HJY)
-// Sub HJY_Distribution() in VBA
-// @param x: Entry age
-// @param nn: Insurance period
-// @param mm: Premium payment period
-// @param Wx_B: Withdrawal rate table function - Wx_B(period, year)
-// @param JHJ_Flag: Lapse processing flag (< 2 means clear arrays)
-// @return: Pair of maps (Qxw, Rxw) where Qxw is lapse rate, Rxw is reinstatement rate
-std::pair<std::map<int, double>, std::map<int, double>> HJYDistribution(
-    int x, int nn, int mm,
-    std::function<double(int, int)> Wx_B,
-    int JHJ_Flag);
+void HjyDistribution(std::vector<double>& qxw,
+                     std::vector<double>& rxw,
+                     const std::vector<std::vector<double>>& wx_b,
+                     const int& mm,
+                     const int& x,
+                     const int& nn,
+                     const int& jhj_flag);
+
+void HjyStdDistribution(std::vector<double>& qxw,
+                        std::vector<double>& rxw,
+                        const std::vector<std::vector<double>>& wx_b,
+                        const int& am,
+                        const int& x,
+                        const int& nn,
+                        const int& jhj_flag);
 
 // Distribute standard lapse and reinstatement rates (HJY_STD)
 // Sub HJY_STD_Distribution() in VBA

@@ -231,22 +231,12 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
       output_ptr->am = std::min(nn, 20);
 
       // Populate Qx array using qx_in from code_table
-      // For ii = 0 To M(Dnum) - 1
-      //   For jj = 0 To 112
-      //     Qx(ii, jj) = Qx_in(Dnum, ii, Sex, jj)
-      // Create lambda to access qx_in: qx_in(dnum, table_idx, sex, age)
-      auto qx_in_func = [code_table](int /*dnum*/, int table_idx, int gender, int age) -> double {
-        if (table_idx >= 0 && table_idx < 5 && gender >= 0 && gender < 2 && age >= 0 && age < 120) {
-          return code_table->qx_in[table_idx][gender][age];
-        }
-        return 0.0;
-      };
       // Loop for sex = 0 (male), 1 (female)
       for (int i = 0; i < 2; ++i) {
         int sex = i;
         [[maybe_unused]] int w = (i == 1) ? 110 : 100;
-        // Call ActuarialCalculator::QxDistribution
-        auto qx_map = ActuarialCalculator::QxDistribution(code_table->M_count, qx_in_func, dnum, sex);
+        // Call ActuarialCalculator::QxDistribution with direct qx_in access
+        auto qx_map = ActuarialCalculator::QxDistribution(code_table->M_count, code_table->qx_in, sex);
         // Convert map to vector format for output_ptr->Qx
         output_ptr->Qx.resize(code_table->M_count);
         for (int ii = 0; ii < code_table->M_count; ++ii) {
