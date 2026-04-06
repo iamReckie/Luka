@@ -110,6 +110,32 @@ double Benefit_SUMx(const int& nn1,
                     const double& current_M1x1,
                     const double& current_M1x2);
 
+double BenefitSUMxt(const int& t,
+                    const int& nn1,
+                    const int& nn,
+                    const int& w,
+                    const double& sumx,
+                    const double& current_pay1,
+                    const double& current_pay2,
+                    const double& current_M0xt,
+                    const double& current_M0xnn,
+                    const double& current_M1xt,
+                    const double& current_M1xnn);
+
+double WBenefitSUMx(const int& x,
+                    const int& nn,
+                    const int& jhj_flag,
+                    const int& amt,
+                    const int& sex,
+                    const std::vector<double>& qxw,
+                    const std::vector<double>& rxw,
+                    const std::vector<double>& lx,
+                    const std::vector<std::vector<double>>& qx,
+                    const std::vector<std::vector<double>>& tvn_std_pj,
+                    const std::vector<std::vector<double>>& tvn_pj,
+                    std::vector<double>& w_cx,
+                    std::vector<double>& w_mx);
+
 // Distribute Qx values from input table
 // Sub Qx_Distribution() in VBA
 // @param m_count: Number of mortality tables (M(Dnum) in VBA)

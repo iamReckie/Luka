@@ -72,83 +72,45 @@ double V1Calculation(double n) {
   return 1.0 / std::pow(1.0 + 0.025, n + 0.5);
 }
 
-// void PV(const int& nn1,
-//         const int& w,
-//         const double& current_pay1,
-//         const double& current_pay2,
-//         const double& current_fst1,
-//         const double& current_fst2,
-//         const double& current_C0x,
-//         const double& current_C1x,
-//         const double& current_M0x1,
-//         const double& current_M0x2,
-//         const double& current_M1x1,
-//         const double& current_M1x2,
-//         const int& JHJ_Flag) {
-//   int kk = 0;
-//   for (int nb = 1; nb < 5; ++nb) {
-//     switch (nb) {
-//       case 1:
-//         kk = 1;
-//         break;
-//       case 2:
-//         kk = 2;
-//         break;
-//       case 3:
-//         kk = 4;
-//         break;
-//       case 4:
-//         kk = 12;
-//         break;
-//       default:
-//         break;
-//     }
-//     double SUMx = Benefit_SUMx(nn1, w, current_pay1, current_pay2, current_fst1, current_fst2, current_C0x, current_C1x, current_M0x1, current_M0x2, current_M1x1, current_M1x2);
-//     (void)SUMx;
-//   }
-// }
-
-double BenefitSUMx(const int& nn1,
+double BenefitSUMx(const int& nn,
                    const int& w,
-                   const double& current_pay1,
-                   const double& current_pay2,
-                   const double& current_fst1,
-                   const double& current_fst2,
-                   const double& current_C0x,
-                   const double& current_C1x,
-                   const double& current_M0x1,
-                   const double& current_M0x2,
-                   const double& current_M1x1,
-                   const double& current_M1x2) {
+                   const int& dnum,
+                   const int& x,
+                   const std::vector<std::vector<double>>& pay,
+                   const std::vector<std::vector<double>>& fst,
+                   const std::vector<double>& c0x,
+                   const std::vector<double>& c1x,
+                   const std::vector<double>& m0x,
+                   const std::vector<double>& m1x) {
   // Sub Benefit_SUMx() in VBA
   // SUMx = Pay(Dnum,0)*(Fst(Dnum,0)*C0x(x) + M0x(x+1) - [M0x(x+nn)])
   //      + Pay(Dnum,1)*(Fst(Dnum,1)*C1x(x) + M1x(x+1) - [M1x(x+nn)])
-  // nn1 < w : finite insurance period (M0x/M1x terms include terminal subtraction)
-  // nn1 >= w: whole life (no terminal subtraction)
+  // nn < w : finite insurance period (M0x/M1x terms include terminal subtraction)
+  // nn >= w: whole life (no terminal subtraction)
   double sumX = 0.0;
-  if (nn1 < w) {
-    sumX = current_pay1 * (current_fst1 * current_C0x + current_M0x1 - current_M0x2) +
-           current_pay2 * (current_fst2 * current_C1x + current_M1x1 - current_M1x2);
+  if (nn < w) {
+    sumX = pay[dnum][0] * (fst[dnum][0] * c0x[x] + m0x[x + 1] - m0x[x + nn]) +
+           pay[dnum][1] * (fst[dnum][1] * c1x[x] + m1x[x + 1] - m1x[x + nn]);
   } else {
-    sumX = current_pay1 * (current_fst1 * current_C0x + current_M0x1) +
-           current_pay2 * (current_fst2 * current_C1x + current_M1x1);
+    sumX = pay[dnum][0] * (fst[dnum][0] * c0x[x] + m0x[x + 1]) +
+           pay[dnum][1] * (fst[dnum][1] * c1x[x] + m1x[x + 1]);
   }
   return sumX;
 }
 
-double WBenefitSUMx(std::vector<double>& w_cx,
-                    std::vector<double>& w_mx,
-                    const int& x,
+double WBenefitSUMx(const int& x,
                     const int& nn,
                     const int& jhj_flag,
-                    const std::vector<double>& qxw,
-                    const std::vector<double>& rxw,
-                    const std::vector<std::vector<double>>& tvn_std_pj,
-                    const std::vector<std::vector<double>>& tvn_pj,
                     const int& amt,
                     const int& sex,
+                    const std::vector<double>& qxw,
+                    const std::vector<double>& rxw,
                     const std::vector<double>& lx,
-                    const std::vector<std::vector<double>>& qx) {
+                    const std::vector<std::vector<double>>& qx,
+                    const std::vector<std::vector<double>>& tvn_std_pj,
+                    const std::vector<std::vector<double>>& tvn_pj,
+                    std::vector<double>& w_cx,
+                    std::vector<double>& w_mx) {
   for (int i = 0; i < nn; ++i) {
     if (jhj_flag == 2) {
       w_cx[x + i] = rxw[x + i] * ((tvn_std_pj[sex][i] + tvn_std_pj[sex][i + 1]) / 2.0 / amt) * lx[x + i] * qxw[x + i] * (1 - 0.5 * qx[0][x + i] * V1Calculation(i));
@@ -166,6 +128,136 @@ double WBenefitSUMx(std::vector<double>& w_cx,
     }
   }
   return w_mx[x] - w_mx[x + nn];
+}
+
+// Sub Benefit_SUMxt() in VBA
+double BenefitSUMxt(const int& t,
+                    const int& nn1,
+                    const int& nn,
+                    const int& dnum,
+                    const int& x,
+                    const double& sumx,
+                    const std::vector<double>& m0x,
+                    const std::vector<double>& m1x,
+                    const std::vector<std::vector<double>>& pay) {
+  if (t == 0) {
+    return sumx;
+  }
+  if (nn1 < 110) {
+    return pay[dnum][0] * (m0x[x + t] - m0x[x + nn]) + pay[dnum][1] * (m1x[x + t] - m1x[x + nn]);
+  } else {
+    return pay[dnum][0] * m0x[x + t] + pay[dnum][1] * m1x[x + t];
+  }
+}
+
+double BankersRound(double value, int decimal_places) {
+  double factor = std::pow(10.0, decimal_places);
+  double scaled = value * factor;
+  double floored = std::floor(scaled);
+  double diff = scaled - floored;
+  if (diff < 0.5) {
+    return floored / factor;
+  }
+  if (diff > 0.5) {
+    return (floored + 1.0) / factor;
+  }
+  return ((std::fmod(floored, 2.0) == 0.0) ? floored : floored + 1.0) / factor;
+}
+
+void PV(const int& nn1,
+        const int& nn,
+        const int& w,
+        const int& am,
+        const int& x,
+        const int& sex,
+        const int& amt,
+        const int& mm,
+        const int& alp,
+        const int& jhj_flag,
+        const int& dnum,
+        const int& t,
+        const double& beta1,
+        const double& beta2,
+        const double& beta3,
+        const double& gamma,
+        const std::vector<double>& nx,
+        const std::vector<double>& dx,
+        const std::vector<double>& npx,
+        const std::vector<double>& dpx,
+        const std::vector<double>& std_srt,
+        const std::vector<double>& c0x,
+        const std::vector<double>& c1x,
+        const std::vector<double>& m0x,
+        const std::vector<double>& m1x,
+        const std::vector<double>& lx,
+        const std::vector<double>& rxw,
+        const std::vector<double>& qxw,
+        const std::vector<std::vector<double>>& pay,
+        const std::vector<std::vector<double>>& fst,
+        const std::vector<std::vector<double>>& tvn_std_pj,
+        const std::vector<std::vector<double>>& tvn_pj,
+        const std::vector<std::vector<double>>& qx,
+        std::vector<double>& std_np,
+        std::vector<double>& np_beta,
+        std::vector<double>& applied_alpha,
+        std::vector<double>& standard_alpha,
+        std::vector<double>& w_cx,
+        std::vector<double>& w_mx,
+        std::vector<std::vector<double>>& nnx,
+        std::vector<std::vector<double>>& np1,
+        std::vector<std::vector<double>>& np,
+        std::vector<std::vector<double>>& ss1x,
+        std::vector<std::vector<double>>& ss2x,
+        std::vector<std::vector<double>>& gp,
+        std::vector<std::vector<double>>& gp1) {
+  std::vector<double> adjusted_sp;
+  int kk = 0;
+  double w_sum_x{0.0}, sum_x{0.0}, sumxt{0.0};
+  for (int nb = 1; nb < 5; ++nb) {
+    switch (nb) {
+      case 1:
+        kk = 1;
+        break;
+      case 2:
+        kk = 2;
+        break;
+      case 3:
+        kk = 4;
+        break;
+      case 4:
+        kk = 12;
+        break;
+      default:
+        break;
+    }
+    sum_x = BenefitSUMx(nn, w, dnum, x, pay, fst, c0x, c1x, m0x, m1x);
+    if (jhj_flag >= 2) {
+      w_sum_x = WBenefitSUMx(x, nn, jhj_flag, amt, sex, qxw, rxw, lx, qx, tvn_std_pj, tvn_pj, w_cx, w_mx);
+    } else {
+      w_sum_x = 0;
+    }
+    if (jhj_flag < 3) {
+      adjusted_sp.emplace_back((sum_x + w_sum_x) / (npx[x] - npx[x + am]));
+      std_np[sex] = BankersRound(adjusted_sp[sex] * amt, 0);
+    }
+    nnx[sex][nb] = kk * (npx[x] - npx[x + mm] - (kk - 1) / ((2 * kk) * (dpx[x] - dpx[x + mm])));
+    np1[sex][nb] = (sum_x + w_sum_x) / nnx[sex][nb];
+    np[sex][nb] = BankersRound(np1[sex][nb] * amt, 0);
+
+    ss1x[sex][nb] = (beta2 / kk) + beta3 * (nx[x + mm] - nx[x + nn]) / nnx[sex][nb];
+    ss2x[sex][nb] = 1 - alp * dx[x] * kk / nnx[sex][nb] - beta1 - gamma;
+
+    gp1[sex][nb] = (np1[sex][nb] + ss1x[sex][nb]) / ss2x[sex][nb];
+    gp[sex][nb] = BankersRound(gp1[sex][nb] * amt, 0);
+  }
+  np_beta[sex] = np1[sex][1] + beta3 * (nx[x + mm] - nx[x + nn]) / (npx[x] - npx[x + mm]);
+  applied_alpha[sex] = BankersRound(alp * 12 * gp[sex][4], 2);
+  standard_alpha[sex] = BankersRound((std_np[sex] * 0.05 * am + std_srt[dnum] * 10 / (1000 * amt)) * 1, 2);
+
+  for (int i = 0; i < nn; ++i) {
+    sumxt = BenefitSUMxt(t, nn1, nn, dnum, x, sum_x, m0x, m1x, pay);
+    (void)sumxt;
+  }
 }
 
 void HjyDistribution(std::vector<double>& qxw,
