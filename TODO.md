@@ -1,7 +1,3 @@
 # TODO
-- 빼먹은게 있다.
-- S_Ration_Calc함수에 보면 뒤에 이것저것 더하는데 지금 그부분을 구현하지 않았ㄸ다.
-- 현재 다시 PV함수를 구현하고 잇다.
-## PV
-- PV함수는 C2_Calculation.bas에 선언되어 있다.
-- 21번째 줄을 보면 WSumX가 있는데 이것까지 구현 완료했다.
+- PV구현 완료했다.
+- insurance_output_data_structure.cc에서 PV호출하는 부분부터 다시 해보자.

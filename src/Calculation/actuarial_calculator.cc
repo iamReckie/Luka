@@ -197,6 +197,8 @@ void PV(const int& nn1,
         const std::vector<std::vector<double>>& tvn_std_pj,
         const std::vector<std::vector<double>>& tvn_pj,
         const std::vector<std::vector<double>>& qx,
+        double& fpi,
+        double& tVnn,
         std::vector<double>& std_np,
         std::vector<double>& np_beta,
         std::vector<double>& applied_alpha,
@@ -209,10 +211,13 @@ void PV(const int& nn1,
         std::vector<std::vector<double>>& ss1x,
         std::vector<std::vector<double>>& ss2x,
         std::vector<std::vector<double>>& gp,
-        std::vector<std::vector<double>>& gp1) {
+        std::vector<std::vector<double>>& gp1,
+        std::vector<std::vector<double>>& sum_t,
+        std::vector<std::vector<double>>& w_sum_t,
+        std::vector<std::vector<double>>& tVn) {
   std::vector<double> adjusted_sp;
   int kk = 0;
-  double w_sum_x{0.0}, sum_x{0.0}, sumxt{0.0};
+  double w_sum_x{0.0}, sum_x{0.0}, w_sumxt{0.0}, sumxt{0.0};
   for (int nb = 1; nb < 5; ++nb) {
     switch (nb) {
       case 1:
@@ -256,7 +261,21 @@ void PV(const int& nn1,
 
   for (int i = 0; i < nn; ++i) {
     sumxt = BenefitSUMxt(t, nn1, nn, dnum, x, sum_x, m0x, m1x, pay);
-    (void)sumxt;
+    if (jhj_flag >= 2) {
+      w_sumxt = w_mx[x + i] - w_mx[x + nn];
+    } else {
+      w_sumxt = 0;
+    }
+
+    if (i < mm) {
+      fpi = np_beta[sex] * (npx[x + i] - npx[x + mm]);
+      tVnn = (sumxt + w_sumxt + beta3 * (nx[x + mm] - nx[x + nn]) - fpi) / dx[x + i];
+    } else {
+      tVnn = (sumxt + w_sumxt + beta3 * (nx[x + i] - nx[x + nn])) / dx[x + i];
+    }
+    sum_t[sex][i] = sumxt;
+    w_sum_t[sex][i] = w_sumxt;
+    tVn[sex][i] = BankersRound(tVnn * amt, 0);
   }
 }
 
