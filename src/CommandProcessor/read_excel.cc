@@ -225,8 +225,12 @@ void ReadExcelCommand::Execute(const YAML::Node& command_data) {
         break;
     }
     data_helper_->PrintData(sheet_name);
+    if (sheet_name == L"S_Ratio") {
+      std::wstring post_key = L"";
+      data_helper_->ExecuteData(L"S_Ratio", post_key, L"SRatio", {}, nullptr);
+    }
   }
   // Do expense output construction after reading excel is finished.
-  std::wstring key = L"";
-  data_helper_->ExecuteData(L"ExpenseOutput", key, L"ExpenseOutput", {}, nullptr);
+  // std::wstring key = L"";
+  // data_helper_->ExecuteData(L"ExpenseOutput", key, L"ExpenseOutput", {}, nullptr);
 }

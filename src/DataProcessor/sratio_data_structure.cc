@@ -20,6 +20,10 @@
 
 #include "Logger/logger.h"
 void SRatioDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
+  if (args.empty()) {
+    PostProcess(context);
+    return;
+  }
   auto& sratio_table = std::any_cast<SRatioTableMap&>(context);
   std::wstring input = std::any_cast<std::wstring>(args[0]);
   int column = std::any_cast<int>(args[1]);
@@ -39,10 +43,10 @@ void SRatioDataStructure::ConstructDataStructure(std::any& context, const std::v
     case 2:
       new_sratio_table = std::make_shared<SRatioTable>();
       current_sratio_table.emplace_back(new_sratio_table);
-      current_sratio_table.back()->name = input;
+      current_sratio_table.back()->dname = input;
       break;
     case 3:
-      current_sratio_table.back()->standard_price = toDouble(input);
+      current_sratio_table.back()->amt = toDouble(input);
       break;
     case 6:
       current_sratio_table.back()->renewal = toInt(input);
@@ -51,7 +55,7 @@ void SRatioDataStructure::ConstructDataStructure(std::any& context, const std::v
       current_sratio_table.back()->sex = toInt(input);
       break;
     case 8:
-      current_sratio_table.back()->age = toInt(input);
+      current_sratio_table.back()->x = toInt(input);
       break;
     case 11:
       current_sratio_table.back()->category = toInt(input);
@@ -63,13 +67,13 @@ void SRatioDataStructure::ConstructDataStructure(std::any& context, const std::v
       current_sratio_table.back()->due = toInt(input);
       break;
     case 14:
-      current_sratio_table.back()->real_due = toInt(input);
+      current_sratio_table.back()->nn = toInt(input);
       break;
     case 15:
       current_sratio_table.back()->adjust = toDouble(input);
       break;
     case 16:
-      current_sratio_table.back()->regular = toDouble(input);
+      current_sratio_table.back()->mm = toDouble(input);
       break;
     case 17:
       current_sratio_table.back()->sratio = toDouble(input);
@@ -112,17 +116,17 @@ void SRatioDataStructure::PrintDataStructure(const std::any& context) const {
     auto current_sratio_table = entry.second;
     Logger::Log(L"sratio dnum: %d\n", dnum);
     for (const auto& iter : current_sratio_table) {
-      Logger::Log(L"  name: %ls", iter->name.c_str());
-      Logger::Log(L" standard_price: %lf", iter->standard_price);
+      Logger::Log(L"  dname: %ls", iter->dname.c_str());
+      Logger::Log(L" amt: %lf", iter->amt);
       Logger::Log(L" renewal: %d", iter->renewal);
       Logger::Log(L" sex: %d", iter->sex);
-      Logger::Log(L" age: %d", iter->age);
+      Logger::Log(L" x: %d", iter->x);
       Logger::Log(L" category: %d", iter->category);
       Logger::Log(L" real_category: %d", iter->real_category);
       Logger::Log(L" due: %d", iter->due);
-      Logger::Log(L" real_due: %d", iter->real_due);
+      Logger::Log(L" nn: %d", iter->nn);
       Logger::Log(L" adjust: %lf", iter->adjust);
-      Logger::Log(L" regular: %lf", iter->regular);
+      Logger::Log(L" mm: %lf", iter->mm);
       Logger::Log(L" sratio: %lf", iter->sratio);
       Logger::Log(L" min_s: %lf", iter->min_s);
       Logger::Log(L" apply_alpha: %lf", iter->apply_alpha);
@@ -130,4 +134,9 @@ void SRatioDataStructure::PrintDataStructure(const std::any& context) const {
       Logger::Log(L" reverse: %d\n", iter->reverse);
     }
   }
+}
+
+void SRatioDataStructure::PostProcess(std::any& context) {
+  (void)context;
+  Logger::Log(L"hello world\n");
 }
