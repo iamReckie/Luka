@@ -205,25 +205,12 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
       // Get alp and beta values from expense_table_map using dnum and mm
       auto expense_it = expense_table_map.find(dnum);
       if (expense_it != expense_table_map.end()) {
-        const auto& expense_vector = expense_it->second;
-        bool found = false;
-
-        // Loop through expense_vector to find matching mm
-        for (const auto& expense_item : expense_vector) {
-          if (expense_item->mm == mm) {
-            output_ptr->alp = expense_item->ap;
-            output_ptr->beta1 = expense_item->bp;
-            output_ptr->beta2 = expense_item->bs;
-            output_ptr->beta3 = expense_item->b2;
-            output_ptr->gamma = expense_item->bo;
-            found = true;
-            break;
-          }
-        }
-
-        if (!found) {
-          Abort(L"mm value %d not found in expense_vector for dnum %d\n", mm, dnum);
-        }
+        const auto& expense_table = expense_it->second;
+        output_ptr->alp = expense_table->alp_in[dnum][mm];
+        output_ptr->beta1 = expense_table->beta1_in[dnum][mm];
+        output_ptr->beta2 = expense_table->beta2_in[dnum][mm];
+        output_ptr->beta3 = expense_table->beta3_in[dnum][mm];
+        output_ptr->gamma = expense_table->gamma_in[dnum][mm];
       } else {
         Abort(L"dnum %d not found in expense_table_map\n", dnum);
       }

@@ -20,16 +20,24 @@
 
 #include "DataProcessor/data_processor.h"
 struct ExpenseTable {
-  int mm;
-  double ap;
-  double bp;
-  double bs;
-  double b2;
-  double bo;
+  int mm{0};
+  std::vector<std::vector<double>> alp_in;
+  std::vector<std::vector<double>> beta1_in;
+  std::vector<std::vector<double>> beta2_in;
+  std::vector<std::vector<double>> beta3_in;
+  std::vector<std::vector<double>> gamma_in;
+
+  ExpenseTable() {
+    alp_in.resize(10, std::vector<double>(30));
+    beta1_in.resize(10, std::vector<double>(30));
+    beta2_in.resize(10, std::vector<double>(30));
+    beta3_in.resize(10, std::vector<double>(30));
+    gamma_in.resize(10, std::vector<double>(30));
+  }
 };
 class ExpenseDataStructure : public IDataStructure {
  public:
-  using ExpenseTableMap = std::unordered_map<int, std::vector<std::shared_ptr<ExpenseTable>>>;
+  using ExpenseTableMap = std::unordered_map<int, std::shared_ptr<ExpenseTable>>;
 
   explicit ExpenseDataStructure(std::shared_ptr<DataHelper> data_helper)
       : IDataStructure(data_helper) {}

@@ -34,13 +34,13 @@ void ExpenseOutputDataStructure::ConstructDataStructure(std::any& context, const
       Abort(L"Failed to get ExpenseData context\n");
     }
     const auto& expense_data_map = std::any_cast<const ExpenseDataStructure::ExpenseTableMap&>(*expense_data_context_ptr);
-    for (const auto& [key_int, expense_tables] : expense_data_map) {
-      for (const auto& expense_table : expense_tables) {
-        output_ptr->alp_in[key_int][expense_table->mm] = expense_table->ap;
-        output_ptr->beta1_in[key_int][expense_table->mm] = expense_table->bp;
-        output_ptr->beta2_in[key_int][expense_table->mm] = expense_table->bs;
-        output_ptr->beta3_in[key_int][expense_table->mm] = expense_table->b2;
-        output_ptr->gamma_in[key_int][expense_table->mm] = expense_table->bo;
+    for (const auto& [key_int, expense_table] : expense_data_map) {
+      for (int mm = 0; mm < 30; ++mm) {
+        output_ptr->alp_in[key_int][mm] = expense_table->alp_in[key_int][mm];
+        output_ptr->beta1_in[key_int][mm] = expense_table->beta1_in[key_int][mm];
+        output_ptr->beta2_in[key_int][mm] = expense_table->beta2_in[key_int][mm];
+        output_ptr->beta3_in[key_int][mm] = expense_table->beta3_in[key_int][mm];
+        output_ptr->gamma_in[key_int][mm] = expense_table->gamma_in[key_int][mm];
       }
     }
     expense_output_context.output = output_ptr;
