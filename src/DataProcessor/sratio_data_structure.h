@@ -58,6 +58,7 @@ class SRatioDataStructure : public IDataStructure {
 
  private:
   void PostProcess(std::any& context);
+  int last_key_ = 0;
 };
 
 #endif  // SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_

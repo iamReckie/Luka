@@ -30,6 +30,7 @@ void SRatioDataStructure::ConstructDataStructure(std::any& context, const std::v
   int key_to_int{0};
   if (column == 1) {
     key = input;
+    last_key_ = std::stoi(input);
     return;
   }
   auto toInt = [](const std::wstring& str) -> int { return std::stoi(str); };
@@ -137,6 +138,7 @@ void SRatioDataStructure::PrintDataStructure(const std::any& context) const {
 }
 
 void SRatioDataStructure::PostProcess(std::any& context) {
-  (void)context;
-  Logger::Log(L"hello world\n");
+  auto& sratio_table = std::any_cast<SRatioTableMap&>(context);
+  auto& last_row = sratio_table[last_key_].back();
+  Logger::Log(L"PostProcess: key=%d dname=%ls\n", last_key_, last_row->dname.c_str());
 }

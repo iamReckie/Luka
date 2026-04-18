@@ -41,12 +41,18 @@ ReadExcelCommand::get_cell_value(const OpenXLSX::XLCellValue& cell_value) {
 
 void ReadExcelCommand::ProcessRow(const std::vector<std::pair<int, std::wstring>>& cells, const std::wstring& sheet_name, const std::wstring& sheet_type, std::any* context) {
   std::wstring key = L"";
+  if (sheet_type == L"SRatio") {
+    printf("wontae test\n");
+  }
   for (const auto& [col, cell_string] : cells) {
     if (cell_string.empty()) {
       continue;
     }
     std::vector<std::any> args{cell_string, col};
     data_helper_->ExecuteData(sheet_name, key, sheet_type, args, context);
+  }
+  if (sheet_type == L"SRatio") {
+    data_helper_->ExecuteData(sheet_name, key, sheet_type, {}, nullptr);
   }
 }
 void ReadExcelCommand::ExecuteSingleThread(OpenXLSX::XLWorksheet& wks,
@@ -225,10 +231,6 @@ void ReadExcelCommand::Execute(const YAML::Node& command_data) {
         break;
     }
     data_helper_->PrintData(sheet_name);
-    if (sheet_name == L"S_Ratio") {
-      std::wstring post_key = L"";
-      data_helper_->ExecuteData(L"S_Ratio", post_key, L"SRatio", {}, nullptr);
-    }
   }
   // Do expense output construction after reading excel is finished.
   // std::wstring key = L"";
