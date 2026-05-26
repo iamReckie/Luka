@@ -33,8 +33,7 @@ struct CodeTable {
   int re;
   int M_count;
   std::unordered_map<std::wstring, std::shared_ptr<SubCodeTable>> sub_code_table;
-  // qx_in[C1][gender][age]: C1(0-4), gender(0=Male,1=Female), age(0-119)
-  double qx_in[5][2][120] = {{{0.0}}};
+  std::unordered_map<int, std::wstring> qx_key_map;  // C1 index -> qx_key (per Dnum)
 };
 struct CodeDataContext {
   std::unordered_map<int, std::shared_ptr<CodeTable>> code_table;

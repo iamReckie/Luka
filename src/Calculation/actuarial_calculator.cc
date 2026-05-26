@@ -13,6 +13,7 @@
 // ============================================================================
 #include "Calculation/actuarial_calculator.h"
 
+#include <array>
 #include <cmath>
 #include <memory>
 
@@ -353,15 +354,15 @@ void Computation(std::shared_ptr<InsuranceOutput>& output_ptr, const int& nn, co
 // Distribute Qx values from input table
 // Sub Qx_Distribution() in VBA
 std::map<int, std::map<int, double>> QxDistribution(const int& m_count,
-                                                    const double qx_in[][2][120],
+                                                    const std::array<std::array<std::array<double, 120>, 2>, 5>& qx_in,
                                                     const int& sex) {
   std::map<int, std::map<int, double>> current_qx;
 
-  // Loop through mortality tables: ii = 0 to M(Dnum) - 1
+  // For ii = 0 To M(Dnum) - 1
   for (int ii = 0; ii < m_count; ++ii) {
-    // Loop through ages: jj = 0 to 112
+    // For jj = 0 To 112
     for (int jj = 0; jj <= 112; ++jj) {
-      // Qx(ii, jj) = Qx_in(ii, Sex, jj)
+      // Qx(ii, jj) = Qx_in(Dnum, ii, Sex, jj)
       current_qx[ii][jj] = qx_in[ii][sex][jj];
     }
   }

@@ -14,6 +14,7 @@
 #ifndef SRC_CALCULATION_ACTUARIAL_CALCULATOR_H_
 #define SRC_CALCULATION_ACTUARIAL_CALCULATOR_H_
 
+#include <array>
 #include <functional>
 #include <map>
 #include <memory>
@@ -187,11 +188,11 @@ void PV(const int& nn1,
 // Distribute Qx values from input table
 // Sub Qx_Distribution() in VBA
 // @param m_count: Number of mortality tables (M(Dnum) in VBA)
-// @param qx_in: Mortality rate table - qx_in[table_idx][gender][age]
+// @param qx_in: Mortality rate table - qx_in[C1][sex][age] = Qx_in(Dnum, C1, Sex, age)
 // @param sex: Gender (0=male, 1=female)
-// @return: 2D map of Qx values [table_idx][age]
+// @return: 2D map of Qx values [C1][age]
 std::map<int, std::map<int, double>> QxDistribution(const int& m_count,
-                                                    const double qx_in[][2][120],
+                                                    const std::array<std::array<std::array<double, 120>, 2>, 5>& qx_in,
                                                     const int& sex);
 
 void HjyDistribution(std::vector<double>& qxw,

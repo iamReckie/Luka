@@ -18,9 +18,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "DataProcessor/data_helper.h"
 #include "DataProcessor/excel_columns.h"
-#include "DataProcessor/qx_data_structure.h"
 #include "Logger/logger.h"
 void CodeDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
   auto& code_context = std::any_cast<CodeDataContext&>(context);
@@ -66,6 +64,7 @@ void CodeDataStructure::ConstructDataStructure(std::any& context, const std::vec
         int c1 = column - 12;
         if (!input.empty()) {
           code_context.qx_key_map[c1] = input;
+          current_code_table->qx_key_map[c1] = input;
         }
       } else if (column >= CodeColumns::QX_VALUES_START) {
         // Columns 42+: pay, fst, snd values
@@ -84,37 +83,6 @@ void CodeDataStructure::ConstructDataStructure(std::any& context, const std::vec
           break;  // No qx_key for this C1, skip
         }
         const std::wstring& qx_key = qx_key_it->second;
-
-        // Get Qx table name based on qx_ku (0 -> "Qx", 1 -> "Qx1")
-        auto data_helper = GetDataHelper();
-        std::wstring qx_table_name = data_helper->GetQxNameMapping(current_code_table->qx_ku);
-        if (qx_table_name.empty()) {
-          qx_table_name = L"Qx";  // Default to "Qx" if not found
-        }
-
-        // Get the Qx table data from data_helper
-        auto qx_context = data_helper->GetDataContext(qx_table_name);
-        if (!qx_context) {
-          Logger::Log(L"Warning: Qx table '%ls' not found for qx_key '%ls'\n",
-                      qx_table_name.c_str(), qx_key.c_str());
-          break;
-        }
-
-        // Cast to QxTableMap and find data for this qx_key
-        auto& qx_table_map = std::any_cast<QxDataStructure::QxTableMap&>(*qx_context);
-        auto qx_data_it = qx_table_map.find(qx_key);
-        if (qx_data_it != qx_table_map.end()) {
-          // Found qx_key in Qx table, populate qx_in array
-          const auto& qx_rows = qx_data_it->second;
-          for (const auto& row : qx_rows) {
-            int age = row->age;
-            if (age >= 0 && age < 120) {
-              // Store Male (index 0) and Female (index 1) mortality rates
-              current_code_table->qx_in[c1][0][age] = row->male;
-              current_code_table->qx_in[c1][1][age] = row->female;
-            }
-          }
-        }
 
         // Initialize SubCodeTable if not exists
         if (current_code_table->sub_code_table.find(qx_key) == current_code_table->sub_code_table.end()) {

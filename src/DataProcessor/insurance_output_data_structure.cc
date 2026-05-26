@@ -78,6 +78,13 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
     const auto& code_context = std::any_cast<const CodeDataContext&>(*code_context_ptr);
     const auto& code_map = code_context.code_table;
 
+    // Get Qx context for qx_in lookup
+    auto* qx_context_any = data_helper->GetDataContext(L"Qx");
+    if (!qx_context_any) {
+      Abort(L"Failed to get Qx context\n");
+    }
+    const auto& qx_table_map = std::any_cast<const QxDataStructure::QxTableMap&>(*qx_context_any);
+
     // Helper lambda to parse index from string safely
     auto parse_index = [](const std::wstring& s) -> int {
       try {
@@ -217,13 +224,18 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
 
       output_ptr->am = std::min(nn, 20);
 
-      // Populate Qx array using qx_in from code_table
-      // Loop for sex = 0 (male), 1 (female)
+      // Populate Qx array: qx_in[C1][sex][age] = Qx_in(Dnum, ii, Sex, jj)
+      std::array<std::array<std::array<double, 120>, 2>, 5> qx_in{};
+      for (const auto& [c1, qx_key] : code_table->qx_key_map) {
+        auto it = qx_table_map.find(qx_key);
+        if (it != qx_table_map.end()) {
+          qx_in[c1] = it->second->qx_in;
+        }
+      }
       for (int i = 0; i < 2; ++i) {
         int sex = i;
         [[maybe_unused]] int w = (i == 1) ? 110 : 100;
-        // Call ActuarialCalculator::QxDistribution with direct qx_in access
-        auto qx_map = ActuarialCalculator::QxDistribution(code_table->M_count, code_table->qx_in, sex);
+        auto qx_map = ActuarialCalculator::QxDistribution(code_table->M_count, qx_in, sex);
         // Convert map to vector format for output_ptr->Qx
         output_ptr->Qx.resize(code_table->M_count);
         for (int ii = 0; ii < code_table->M_count; ++ii) {
@@ -238,40 +250,6 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
         } else {
         }
       }
-
-      std::wstring qx_name = data_helper->GetQxNameMapping(dnum);
-
-      Logger::Log(L"Getting qx_name (sheet name) for dnum %d: %ls\n", dnum, qx_name.c_str());
-
-      auto* qx_context_ptr = data_helper->GetDataContext(qx_name);
-      if (!qx_context_ptr) {
-        Abort(L"Failed to get qx table context for name: %ls\n", qx_name.c_str());
-      }
-      const auto& qx_table_map = std::any_cast<const QxDataStructure::QxTableMap&>(*qx_context_ptr);
-
-      Logger::Log(L"QxTableMap keys: ");
-      for (const auto& [key, _] : qx_table_map) {
-        Logger::Log(L"%ls ", key.c_str());
-      }
-      Logger::Log(L"\n");
-
-      // Get qx_key from sub_code_table
-      // VBA: For C1 = 0 To M(Dnum) - 1, we need to determine which C1 to use
-      // For now, use the first one or find matching one
-      if (code_table->sub_code_table.empty()) {
-        Abort(L"sub_code_table is empty for bojong %d\n", bojong);
-      }
-
-      // Get the first qx_key (or you can use mm to determine which one)
-      std::wstring qx_key = code_table->sub_code_table.begin()->first;
-      Logger::Log(L"Using qx_key: %ls\n", qx_key.c_str());
-
-      // Find qx values using qx_key
-      auto qx_it = qx_table_map.find(qx_key);
-      if (qx_it == qx_table_map.end()) {
-        Abort(L"qx table data not found for key: %ls in sheet: %ls\n", qx_key.c_str(), qx_name.c_str());
-      }
-      // const auto& qx_values = qx_it->second;
 
       // Add this completed output_ptr to the context
       insurance_output_context.output.push_back(output_ptr);

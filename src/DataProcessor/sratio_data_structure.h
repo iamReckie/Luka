@@ -15,6 +15,7 @@
 #define SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_
 #include <algorithm>
 #include <any>
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -38,6 +39,10 @@ struct SRatioTable {
   double apply_alpha;
   double standard_alpha;
   bool reverse;
+  // QxDistribution result: Qx[C1][age]
+  std::map<int, std::map<int, double>> Qx;
+  int mhj = 0;
+  int jhj_flag = 0;
   int nn1() const { return x + nn; }
   int am() const { return std::min(nn, 20); }
   int w() const { return sex == 1 ? 110 : 112; }
@@ -58,7 +63,7 @@ class SRatioDataStructure : public IDataStructure {
 
  private:
   void PostProcess(std::any& context);
-  int last_key_ = 0;
+  int last_dnum_ = 0;
 };
 
 #endif  // SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_
