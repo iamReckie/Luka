@@ -75,6 +75,11 @@ void CalcInsuranceOutputCommand::ProcessVariables(const YAML::Node &variables_no
           insurance_output_result_index.STD_NP_Input.second.push_back(tokens);
         }
       }
+    } else if (var["index"]) {
+      // Handle qx_name_map: index as key, name as value
+      // index 0 -> "Qx", index 1 -> "Qx1", etc.
+      int index = var["index"].as<int>();
+      data_helper_->SetQxNameMapping(index, name);
     } else {
       Logger::Log(L"Unknown variable name: %s\n", name.c_str());
     }
@@ -86,12 +91,30 @@ void CalcInsuranceOutputCommand::ProcessFile(const std::wstring &file_name,
                                              InsuranceOutputIndex &insurance_output_result_index) {
   auto insurance_result_data_structure =
       data_helper_->GetDataStructure(file_name + L"InsuranceResult");
-
   if (variables_node) {
     ProcessVariables(variables_node, insurance_output_result_index, file_name);
   }
 }
-
+void CalcInsuranceOutputCommand::ProcessParameter(const std::wstring &param_name,
+                                                  const YAML::Node &variables_node) {
+  // Implementation for processing a single parameter
+  if (param_name == L"qx_table") {
+    for (const auto &var : variables_node) {
+      std::wstring name = Ctw(var["name"].as<std::string>());
+      if (name == L"Qx") {
+        int index = var["index"].as<int>();
+        Logger::Log(L"Processing Qx with index: %d\n", index);
+        // Add logic to process Qx parameter
+      } else if (name == L"Qx1") {
+        int index = var["index"].as<int>();
+        Logger::Log(L"Processing Qx1 with index: %d\n", index);
+        // Add logic to process Qx1 parameter
+      } else {
+        Logger::Log(L"Unknown parameter name in qx_table: %s\n", name.c_str());
+      }
+    }
+  }
+}
 void CalcInsuranceOutputCommand::Execute(const YAML::Node &command_data) {
   InsuranceOutputIndex insurance_output_result_index;
   std::wstring primary_file_name;

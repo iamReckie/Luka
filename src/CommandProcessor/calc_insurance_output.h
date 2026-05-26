@@ -38,5 +38,7 @@ class CalcInsuranceOutputCommand : public BaseCommand {
   void ProcessFile(const std::wstring &file_name,
                    const YAML::Node &variables_node,
                    InsuranceOutputIndex &insurance_output_result_index);
+  void ProcessParameter(const std::wstring &param_name,
+                        const YAML::Node &variables_node);
 };
 #endif  // SRC_COMMANDPROCESSOR_CALC_INSURANCE_OUTPUT_H_

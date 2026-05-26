@@ -38,9 +38,9 @@ constexpr int QX_KU = 4;
 constexpr int MHJ = 5;
 constexpr int RE = 6;
 constexpr int M_COUNT = 11;
-constexpr int QX_TABLE_START = 12;  // Columns 12-42 are qx table names
-constexpr int QX_TABLE_END = 42;
-constexpr int QX_VALUES_START = 43;  // Columns 43+ are qx values
+constexpr int QX_TABLE_START = 12;  // Columns 12-41 are qx key names
+constexpr int QX_TABLE_END = 41;
+constexpr int QX_VALUES_START = 42;  // Columns 42+ are pay/fst/snd values
 }  // namespace CodeColumns
 
 #endif  // SRC_DATAPROCESSOR_EXCEL_COLUMNS_H_

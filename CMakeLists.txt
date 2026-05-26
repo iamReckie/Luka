@@ -64,6 +64,10 @@ file(GLOB ENVIRONMENTS_SOURCES
 src/Environments/*.cc
 src/Environments/*.h
 )
+file(GLOB CALCULATION_SOURCES
+src/Calculation/*.cc
+src/Calculation/*.h
+)
 
 # CUDA source files(if only cuda exists)
 set(CUDA_SOURCES "")
@@ -82,6 +86,7 @@ add_executable(Luka
     ${DATA_PROCESSOR_SOURCES}
     ${COMMAND_PROCESSOR_SOURCES}
     ${ENVIRONMENTS_SOURCES}
+    ${CALCULATION_SOURCES}
     ${CUDA_SOURCES}
 )
 

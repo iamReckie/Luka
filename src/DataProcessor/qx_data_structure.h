@@ -14,6 +14,7 @@
 #ifndef SRC_DATAPROCESSOR_QX_DATA_STRUCTURE_H_
 #define SRC_DATAPROCESSOR_QX_DATA_STRUCTURE_H_
 #include <any>
+#include <array>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -21,21 +22,15 @@
 
 #include "DataProcessor/data_processor.h"
 struct QxTable {
-  int risk_class;
-  int driver;
-  int sub1;
-  int sub2;
-  int sub3;
-  int sub4;
-  int age;
-  double male;
-  double female;
   std::wstring qx_name;
+  // qx_in[sex=0..1][age=0..119]  (internal 0-based, male=0 female=1)
+  std::array<std::array<double, 120>, 2> qx_in{};
+  int pending_age_ = -1;  // temp used during ConstructDataStructure
 };
 class QxDataStructure : public IDataStructure {
  public:
   using QxTableMap =
-      std::unordered_map<std::wstring, std::vector<std::shared_ptr<QxTable>>>;
+      std::unordered_map<std::wstring, std::shared_ptr<QxTable>>;
 
   explicit QxDataStructure(std::shared_ptr<DataHelper> data_helper)
       : IDataStructure(data_helper) {}

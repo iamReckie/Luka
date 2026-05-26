@@ -38,6 +38,8 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
     std::unordered_map<std::wstring, std::shared_ptr<IDataStructure>> processors;
     std::unordered_map<std::wstring, std::any> contexts;
     std::unordered_map<std::wstring, std::shared_ptr<IDataStructure>> type_cache;
+    // Store qx_name_map: index -> name (0 -> "Qx", 1 -> "Qx1", etc.)
+    std::unordered_map<int, std::wstring> qx_name_map;
   };
 
  public:
@@ -201,6 +203,28 @@ class DataHelper : public std::enable_shared_from_this<DataHelper> {
       return const_cast<std::any *>(&it->second);
     }
     return nullptr;
+  }
+
+  // Add qx name mapping: index -> name (e.g., 0 -> "Qx", 1 -> "Qx1")
+  void SetQxNameMapping(int index, const std::wstring &name) {
+    while (true) {
+      auto current_registry = std::atomic_load(&registry_);
+      auto new_registry = std::make_shared<Registry>(*current_registry);
+      new_registry->qx_name_map[index] = name;
+      if (std::atomic_compare_exchange_strong(&registry_, &current_registry, new_registry)) {
+        break;
+      }
+    }
+  }
+
+  // Get qx name by index (e.g., 0 -> "Qx", 1 -> "Qx1")
+  std::wstring GetQxNameMapping(int index) {
+    auto current_registry = std::atomic_load(&registry_);
+    auto it = current_registry->qx_name_map.find(index);
+    if (it != current_registry->qx_name_map.end()) {
+      return it->second;
+    }
+    return L"";
   }
 
  private:

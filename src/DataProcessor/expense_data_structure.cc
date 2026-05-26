@@ -34,27 +34,28 @@ void ExpenseDataStructure::ConstructDataStructure(std::any& context, const std::
   };
   key_to_int = toInt(key);
   auto& current_expense_table = expense_table[key_to_int];
-  std::shared_ptr<ExpenseTable> new_qx_table;
+  if (!current_expense_table) {
+    current_expense_table = std::make_shared<ExpenseTable>();
+  }
+  int mm = current_expense_table->mm;
   switch (column) {
     case 2:
-      new_qx_table = std::make_shared<ExpenseTable>();
-      current_expense_table.emplace_back(new_qx_table);
-      current_expense_table.back()->mm = toInt(input);
+      current_expense_table->mm = toInt(input);
       break;
     case 3:
-      current_expense_table.back()->ap = toDouble(input);
+      current_expense_table->alp_in[key_to_int][mm] = toDouble(input);
       break;
     case 4:
-      current_expense_table.back()->bp = toDouble(input);
+      current_expense_table->beta1_in[key_to_int][mm] = toDouble(input);
       break;
     case 5:
-      current_expense_table.back()->bs = toDouble(input);
+      current_expense_table->beta2_in[key_to_int][mm] = toDouble(input);
       break;
     case 6:
-      current_expense_table.back()->b2 = toDouble(input);
+      current_expense_table->beta3_in[key_to_int][mm] = toDouble(input);
       break;
     case 7:
-      current_expense_table.back()->bo = toDouble(input);
+      current_expense_table->gamma_in[key_to_int][mm] = toDouble(input);
       break;
     default:
       break;
@@ -66,24 +67,23 @@ void ExpenseDataStructure::MergeDataStructure(std::any& target, const std::any& 
   const auto& source_map = std::any_cast<const ExpenseTableMap&>(source);
 
   for (const auto& [key, val] : source_map) {
-    auto& target_vec = target_map[key];
-    target_vec.insert(target_vec.end(), val.begin(), val.end());
+    if (!target_map.count(key)) {
+      target_map[key] = val;
+    }
   }
 }
 
 void ExpenseDataStructure::PrintDataStructure(const std::any& context) const {
   const auto& expense_table = std::any_cast<const ExpenseTableMap&>(context);
-  for (const auto& entry : expense_table) {
-    int dnum = entry.first;
-    auto current_expense_table = entry.second;
-    Logger::Log(L"expense dnum: %d\n", dnum);
-    for (const auto& iter : current_expense_table) {
-      Logger::Log(L"  mm: %d", iter->mm);
-      Logger::Log(L" ap: %lf", iter->ap);
-      Logger::Log(L" bp: %lf", iter->bp);
-      Logger::Log(L" bs: %lf", iter->bs);
-      Logger::Log(L" b2: %lf", iter->b2);
-      Logger::Log(L" bo: %lf\n", iter->bo);
+  for (const auto& [key, table] : expense_table) {
+    Logger::Log(L"expense key: %d\n", key);
+    for (int m = 0; m < static_cast<int>(table->alp_in[key].size()); ++m) {
+      Logger::Log(L"  mm: %d", m);
+      Logger::Log(L" alp_in: %lf", table->alp_in[key][m]);
+      Logger::Log(L" beta1_in: %lf", table->beta1_in[key][m]);
+      Logger::Log(L" beta2_in: %lf", table->beta2_in[key][m]);
+      Logger::Log(L" beta3_in: %lf", table->beta3_in[key][m]);
+      Logger::Log(L" gamma_in: %lf\n", table->gamma_in[key][m]);
     }
   }
 }

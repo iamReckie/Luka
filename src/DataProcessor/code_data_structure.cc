@@ -59,14 +59,49 @@ void CodeDataStructure::ConstructDataStructure(std::any& context, const std::vec
       current_code_table->M_count = toInt(input);
       break;
     default:
-      if (column > CodeColumns::QX_TABLE_START && column <= CodeColumns::QX_TABLE_END) {
-        current_code_table->qx_table_[input];  // default-construct entry
-        code_context.table_for_qx_table[code_context.current_index_of_qx_table++] = input;
+      if (column > CodeColumns::M_COUNT && column < CodeColumns::QX_VALUES_START) {
+        // Columns 12-41: qx_key values (C1 = column - 12, so column 12 -> C1=0)
+        int c1 = column - 12;
+        if (!input.empty()) {
+          code_context.qx_key_map[c1] = input;
+          current_code_table->qx_key_map[c1] = input;
+        }
       } else if (column >= CodeColumns::QX_VALUES_START) {
-        int qx_index = (column - CodeColumns::QX_VALUES_START) / 3;
-        if (qx_index < code_context.current_index_of_qx_table) {
-          const std::wstring& qx_name = code_context.table_for_qx_table[qx_index];
-          current_code_table->qx_table_[qx_name].emplace_back(toDouble(input));
+        // Columns 42+: pay, fst, snd values
+        int offset = column - CodeColumns::QX_VALUES_START;
+        int c1 = offset / 3;
+        int mod = offset % 3;
+
+        // Check if input is empty, if so, stop processing
+        if (input.empty()) {
+          break;
+        }
+
+        // Get qx_key for this C1
+        auto qx_key_it = code_context.qx_key_map.find(c1);
+        if (qx_key_it == code_context.qx_key_map.end()) {
+          break;  // No qx_key for this C1, skip
+        }
+        const std::wstring& qx_key = qx_key_it->second;
+
+        // Initialize SubCodeTable if not exists
+        if (current_code_table->sub_code_table.find(qx_key) == current_code_table->sub_code_table.end()) {
+          current_code_table->sub_code_table[qx_key] = std::make_shared<SubCodeTable>();
+        }
+
+        auto sub_code = current_code_table->sub_code_table[qx_key].get();
+
+        // C1 * 3 + 42 -> pay, C1 * 3 + 43 -> fst, C1 * 3 + 44 -> snd
+        switch (mod) {
+          case 0:
+            sub_code->pay = toDouble(input);
+            break;
+          case 1:
+            sub_code->fst = toDouble(input);
+            break;
+          case 2:
+            sub_code->snd = toDouble(input);
+            break;
         }
       }
       break;
@@ -96,14 +131,14 @@ void CodeDataStructure::PrintDataStructure(const std::any& context) const {
     Logger::Log(L"  re: %d\n", current_code_table->re);
     Logger::Log(L"  M_count: %d\n", current_code_table->M_count);
 
-    // qx_table
-    Logger::Log(L"  qx_table:\n");
-    for (const auto& qx_entry : current_code_table->qx_table_) {
-      Logger::Log(L"    %ls: ", qx_entry.first.c_str());
-      for (const float value : qx_entry.second) {
-        Logger::Log(L"%.2f ", value);
-      }
-      Logger::Log(L"\n");
+    // sub_code_table
+    Logger::Log(L"  sub_code_table:\n");
+    for (const auto& sub_entry : current_code_table->sub_code_table) {
+      Logger::Log(L"    qx_key=%ls: pay=%.2f, fst=%.2f, snd=%.2f\n",
+                  sub_entry.first.c_str(),
+                  sub_entry.second->pay,
+                  sub_entry.second->fst,
+                  sub_entry.second->snd);
     }
     Logger::Log(L"-----------------------------------\n");
   }

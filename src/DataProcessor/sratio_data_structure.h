@@ -13,7 +13,9 @@
 // ============================================================================
 #ifndef SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_
 #define SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_
+#include <algorithm>
 #include <any>
+#include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -21,23 +23,31 @@
 
 #include "DataProcessor/data_processor.h"
 struct SRatioTable {
-  std::wstring name;
-  double standard_price;
+  std::wstring dname;
+  double amt;
   int renewal;
   int sex;
-  int age;
+  int x;
   int category;
   int real_category;
   int due;
-  int real_due;
+  int nn;
   double adjust;
-  double regular;
+  double mm;
   double sratio;
   double min_s;
   double apply_alpha;
   double standard_alpha;
   bool reverse;
+  // QxDistribution result: Qx[C1][age]
+  std::map<int, std::map<int, double>> Qx;
+  int mhj = 0;
+  int jhj_flag = 0;
+  int nn1() const { return x + nn; }
+  int am() const { return std::min(nn, 20); }
+  int w() const { return sex == 1 ? 110 : 112; }
 };
+
 class SRatioDataStructure : public IDataStructure {
  public:
   using SRatioTableMap = std::unordered_map<int, std::vector<std::shared_ptr<SRatioTable>>>;
@@ -50,6 +60,10 @@ class SRatioDataStructure : public IDataStructure {
   void MergeDataStructure(std::any& target, const std::any& source) override;
   void PrintDataStructure(const std::any& context) const override;
   std::any CreateContext() const override { return SRatioTableMap(); }
+
+ private:
+  void PostProcess(std::any& context);
+  int last_dnum_ = 0;
 };
 
 #endif  // SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_
