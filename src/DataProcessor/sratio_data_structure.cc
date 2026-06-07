@@ -23,6 +23,7 @@
 #include "Calculation/actuarial_calculator.h"
 #include "DataProcessor/code_data_structure.h"
 #include "DataProcessor/data_helper.h"
+#include "DataProcessor/expense_data_structure.h"
 #include "DataProcessor/qx_data_structure.h"
 #include "Logger/logger.h"
 void SRatioDataStructure::ConstructDataStructure(std::any& context, const std::vector<std::any>& args, std::wstring& key) {
@@ -88,12 +89,12 @@ void SRatioDataStructure::ConstructDataStructure(std::any& context, const std::v
     case 18:
       current_sratio_table.back()->min_s = toDouble(input);
       break;
-    case 19:
-      current_sratio_table.back()->apply_alpha = toDouble(input);
-      break;
-    case 20:
-      current_sratio_table.back()->standard_alpha = toDouble(input);
-      break;
+    // case 19:
+    //   current_sratio_table.back()->applied_alpha = toDouble(input);
+    //   break;
+    // case 20:
+    //   current_sratio_table.back()->standard_alpha = toDouble(input);
+    //   break;
     case 21:
       if (input == L"미초과") {
         current_sratio_table.back()->reverse = false;
@@ -136,13 +137,13 @@ void SRatioDataStructure::PrintDataStructure(const std::any& context) const {
       Logger::Log(L" mm: %lf", iter->mm);
       Logger::Log(L" sratio: %lf", iter->sratio);
       Logger::Log(L" min_s: %lf", iter->min_s);
-      Logger::Log(L" apply_alpha: %lf", iter->apply_alpha);
+      Logger::Log(L" applied_alpha: %lf", iter->applied_alpha);
       Logger::Log(L" standard_alpha: %lf", iter->standard_alpha);
       Logger::Log(L" reverse: %d\n", iter->reverse);
-      for (const auto& [c1, age_map] : iter->Qx) {
+      for (int c1 = 0; c1 < 5; ++c1) {
         Logger::Log(L"  Qx[C1=%d]:", c1);
-        for (const auto& [age, qx_val] : age_map) {
-          Logger::Log(L" [%d]=%.6f", age, qx_val);
+        for (int age = 0; age < 120; ++age) {
+          Logger::Log(L" [%d]=%.6f", age, iter->qx[age][c1]);
         }
         Logger::Log(L"\n");
       }
@@ -220,10 +221,44 @@ void SRatioDataStructure::PostProcess(std::any& context) {
     }
   }
 
-  row_ref->Qx = ActuarialCalculator::QxDistribution(code_table->M_count, qx_in, sex_index);
+  row_ref->qx = ActuarialCalculator::QxDistribution(code_table->M_count, qx_in, sex_index);
+
+  // VBA: am = Application.Min(nn, 20)
+  row_ref->am = std::min(row_ref->nn, 20);
+  // VBA: w = IIf(Sex = 1, 110, 112)
+  row_ref->w = (row_ref->sex == 1) ? 110 : 112;
+  row_ref->nn1 = row_ref->x + row_ref->nn;
+
+  // VBA: Alp = Alp_in(Dnum, mm), Beta1 = Beta1_in(Dnum, mm), ...
+  auto* expense_data_any = GetDataHelper()->GetDataContext(L"Expense");
+  if (!expense_data_any) {
+    Logger::Log(L"Warning: Expense context not found in SRatioDataStructure::PostProcess\n");
+    return;
+  }
+  const auto& expense_table_map = std::any_cast<const ExpenseDataStructure::ExpenseTableMap&>(*expense_data_any);
+  auto expense_it = expense_table_map.find(last_dnum_);
+  if (expense_it == expense_table_map.end()) {
+    Logger::Log(L"Warning: Expense not found for dnum=%d\n", last_dnum_);
+    return;
+  }
+  const auto* expense_table = expense_it->second.get();
+  int mm_int = static_cast<int>(row_ref->mm);
+  row_ref->alp = expense_table->alp_in[last_dnum_][mm_int];
+  row_ref->beta1 = expense_table->beta1_in[last_dnum_][mm_int];
+  row_ref->beta2 = expense_table->beta2_in[last_dnum_][mm_int];
+  row_ref->beta3 = expense_table->beta3_in[last_dnum_][mm_int];
+  row_ref->gamma = expense_table->gamma_in[last_dnum_][mm_int];
+
+  row_ref->mhj = code_table->mhj;
+  row_ref->dnum = last_dnum_;
+  // VBA: STD_SRT(Dnum) - 1차 루프에서 계산된 값을 복사
+  // (1차 루프가 완료된 후 PostProcess 2차 호출 시 유효한 값이 들어있음)
+  row_ref->std_srt = std_srt_[last_dnum_];
 
   if (code_table->mhj == 0) {
     row_ref->jhj_flag = 0;
+    ActuarialCalculator::Computation(row_ref);
+    ActuarialCalculator::Pv(row_ref);
   } else {
     // Handle mhj != 0 case if needed
   }

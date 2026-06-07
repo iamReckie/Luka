@@ -131,7 +131,7 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
       int idx_NP_1 = -1, idx_NP_2 = -1;
       int idx_Alpha_1 = -1, idx_Alpha_2 = -1;
       int idx_STD_NP_1 = -1, idx_STD_NP_2 = -1;
-      int nn = insurance_result->nn, mm = insurance_result->mm, bojong = insurance_result->bojong, x = insurance_result->x;
+      int nn = insurance_result->nn, mm = insurance_result->mm, bojong = insurance_result->bojong /*, x = insurance_result->x*/;
 
       // Get dnum from code_map using bojong
       int dnum = 0;
@@ -246,7 +246,7 @@ void InsuranceOutputDataStructure::ConstructDataStructure(std::any& context, con
         }
 
         if (code_table->mhj == 0) {
-          ActuarialCalculator::Computation(output_ptr, nn, x);
+          // ActuarialCalculator::Computation(output_ptr, nn, x);
         } else {
         }
       }

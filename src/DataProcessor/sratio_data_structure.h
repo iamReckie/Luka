@@ -15,7 +15,7 @@
 #define SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_
 #include <algorithm>
 #include <any>
-#include <map>
+#include <array>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -36,16 +36,47 @@ struct SRatioTable {
   double mm;
   double sratio;
   double min_s;
-  double apply_alpha;
-  double standard_alpha;
   bool reverse;
   // QxDistribution result: Qx[C1][age]
-  std::map<int, std::map<int, double>> Qx;
+  std::array<std::array<double, 5>, 120> qx;
+  std::array<std::array<double, 2>, 4> np{};
+  std::array<std::array<double, 2>, 4> gp{};
+  std::array<double, 2> np_beta;
+  std::array<double, 2> std_np;
+  std::array<double, 2> applied_alpha;
+  std::array<double, 2> standard_alpha;
+  std::array<double, 200> qxw;
+  std::array<double, 200> rxw;
+  std::array<double, 120> lx{};
+  std::array<double, 120> lpx{};
+  std::array<double, 120> dx{};
+  std::array<double, 120> dpx{};
+  std::array<double, 120> c0x{};
+  std::array<double, 120> c1x{};
+  std::array<double, 120> m0x{};
+  std::array<double, 120> m1x{};
+  std::array<double, 120> w_cx{};
+  std::array<double, 120> w_mx{};
+  std::array<double, 120> nx{};
+  std::array<double, 120> npx{};
+  std::array<std::array<double, 120>, 2> tVn{};         // tVn[sex][t]
+  std::array<std::array<double, 120>, 2> tVn_pj{};      // tVn_PJ[sex][t]
+  std::array<std::array<double, 120>, 2> tVn_std_pj{};  // tVn_STD_PJ[sex][t]
   int mhj = 0;
   int jhj_flag = 0;
-  int nn1() const { return x + nn; }
-  int am() const { return std::min(nn, 20); }
-  int w() const { return sex == 1 ? 110 : 112; }
+  // VBA: am = Application.Min(nn, 20), w = IIf(Sex=1, 110, 112)
+  int am = 0;
+  int w = 0;
+  int nn1 = 0;
+  // VBA: Alp = Alp_in(Dnum, mm), Beta1 = Beta1_in(Dnum, mm), ...
+  double alp = 0.0;
+  double beta1 = 0.0;
+  double beta2 = 0.0;
+  double beta3 = 0.0;
+  double gamma = 0.0;
+  // VBA: Dnum (행마다 저장), STD_SRT(Dnum) (1차 루프 후 복사)
+  int dnum = 0;
+  double std_srt = 0.0;
 };
 
 class SRatioDataStructure : public IDataStructure {
@@ -64,6 +95,9 @@ class SRatioDataStructure : public IDataStructure {
  private:
   void PostProcess(std::any& context);
   int last_dnum_ = 0;
+  // VBA: Public STD_SRT(10) As Double - Dnum별 표준위험률
+  // 1차 루프에서 계산 후 2차 루프(Pv) 전에 SRatioTable에 복사
+  std::array<double, 11> std_srt_{};
 };
 
 #endif  // SRC_DATAPROCESSOR_SRATIO_DATA_STRUCTURE_H_

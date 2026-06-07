@@ -20,6 +20,8 @@
 #include <memory>
 #include <utility>
 #include <vector>
+
+#include "DataProcessor/sratio_data_structure.h"
 // Forward declaration
 struct InsuranceResult;
 struct InsuranceOutput;
@@ -76,7 +78,7 @@ void MxStep(const int& x, const int& nn, CommutationFunctions& cf);
 void MxStep(std::shared_ptr<InsuranceOutput>& output_ptr, const int& nn, const int& x);
 
 // Overloaded Computation for InsuranceOutput pointer
-void Computation(std::shared_ptr<InsuranceOutput>& output_ptr, const int& nn, const int& x);
+void Computation(std::shared_ptr<SRatioTable>& sratio_table);
 
 // V0 discount calculation (present value factor)
 double V0Calculation(double n);
@@ -84,19 +86,7 @@ double V0Calculation(double n);
 // V1 discount calculation (present value factor with half-year adjustment)
 double V1Calculation(double n);
 
-void PV(const int& nn1,
-        const int& w,
-        const double& current_pay1,
-        const double& current_pay2,
-        const double& current_fst1,
-        const double& current_fst2,
-        const double& current_C0x,
-        const double& current_C1x,
-        const double& current_M0x1,
-        const double& current_M0x2,
-        const double& current_M1x1,
-        const double& current_M1x2,
-        const int& JHJ_Flag);
+void Pv(std::shared_ptr<SRatioTable> sratio_table);
 
 double BenefitSUMx(const int& nn,
                    const int& w,
@@ -191,9 +181,9 @@ void PV(const int& nn1,
 // @param qx_in: Mortality rate table - qx_in[C1][sex][age] = Qx_in(Dnum, C1, Sex, age)
 // @param sex: Gender (0=male, 1=female)
 // @return: 2D map of Qx values [C1][age]
-std::map<int, std::map<int, double>> QxDistribution(const int& m_count,
-                                                    const std::array<std::array<std::array<double, 120>, 2>, 5>& qx_in,
-                                                    const int& sex);
+std::array<std::array<double, 5>, 120> QxDistribution(const int& m_count,
+                                                      const std::array<std::array<std::array<double, 120>, 2>, 5>& qx_in,
+                                                      const int& sex);
 
 void HjyDistribution(std::vector<double>& qxw,
                      std::vector<double>& rxw,
